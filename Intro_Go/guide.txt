@@ -465,3 +465,136 @@
 	    for _, v := range statePopulations {
 		    fmt.Println(v)
 	    }
+
+
+// Control Flow //
+
+    * Used to delay execution of a statement until function exist.
+    * Useful to group "open" and "close" functions together
+    * Be careful in loops
+    * Run in LFO (last,in, firs-out) order
+
+
+                                output
+    fmt.Println("start")        start
+    fmt.Println("middle")       middle
+    fmt.Println("end")          end
+
+
+    - Defer
+
+                                        output
+        fmt.Println("start")            start
+        defer fmt.Println("middle")     end
+        fmt.Println("end")              middle
+
+
+                                        output
+        defer fmt.Println("start")      end
+        defer fmt.Println("middle")     start
+        fmt.Println("end")              middle
+
+
+                                        output
+        defer fmt.Println("start")      end
+        defer fmt.Println("middle")     middle
+        defer fmt.Println("end")        start
+
+
+                                        output
+        fmt.Println("counting")         counting
+                                        done
+	    for i := 0; i < 10; i++ {       0
+		    defer fmt.Println(i)        1
+	    }                               2    
+                                        3
+	    fmt.Println("done")             ...
+
+
+    - Panic
+
+        * Occur when program cannot continue at all
+        * Don't use when file can't be opened, unless it is critical
+        * Use for unrecoverable events-cannot obtain TCP port for web server
+
+
+// Pointers //
+
+    * Pointers types use an asteriks (*) as a prefix to type pointed to
+        ---> *int - a pointer to an Integer
+    * Use the addresof operator (&) to get address of variable 
+
+    * Dereference a pointer by preceding with an asteriks (*)
+    * Complex types (e.g. structs) are automatically dereferenced
+
+    * Create pointer to objects
+    * Can use the addressof operator (&) if value type already exists.
+        ---> ms := myStruct{foo:42}
+        ---> p := &ms 
+    * Use addressof operator before initializer
+        ---> &myStruct{foo:42}
+    * Use the 'new' keyword
+        ---> Can't initialize field at the same time
+
+    
+
+    a := 42
+	b := a
+	fmt.Println(a, b) ---> 42 42
+	a = 4
+	fmt.Println(a, b) ---> 4  42
+
+
+    var a int = 42
+	fmt.Print(&a) --->  0xc00000a0e8
+
+    var a int = 42
+	var b *int = &a
+	fmt.Print(a, b) ---> 42 0xc00000a0e8
+
+
+    var a int = 42
+	var b *int = &a
+	fmt.Print(&a, b) ---> 0xc00000a0e8 0xc00000a0e8
+
+    var a int = 42
+	var b *int = &a
+	fmt.Println(a, *b) ---> 42 42
+
+    var a int = 42
+	var b *int = &a
+	fmt.Println(a, *b) ---> 42 42
+	a = 27
+	fmt.Println(a, *b) ---> 27 27
+
+
+    var a int = 42
+	var b *int = &a
+	fmt.Println(a, *b) ---> 42 42
+	a = 27
+	fmt.Println(a, *b) ---> 27 27
+	*b = 14
+	fmt.Println(a, *b) ---> 14 14
+
+
+    a := [3]int{1, 2, 3}
+	b := &a[0]
+	c := &a[1]
+	fmt.Printf("%v %p %p", a, b, c) ---> [1 2 3] 0xc000014108 0xc000014110
+
+
+
+// Functions //
+
+    func sayMessage(msg string){
+        fmt.Println(msg)
+    }
+    sayMessage("Hello Go")
+
+
+    func sayMessage(greeting string, name string) {
+	    fmt.Println(greeting, name)
+    }
+    sayMessage("Hello", "Tesla")   
+
+    

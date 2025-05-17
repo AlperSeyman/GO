@@ -1,19 +1,17 @@
 package main
 
-import (
-	"fmt"
-)
+import "fmt"
+
+func update(name *string) {
+	*name = "Alper"
+}
 
 func main() {
 
-	statePopulations := map[string]int{ // map[key]value
-		"California": 39250017,
-		"Texas":      27862589,
-		"Florida":    20612439,
-		"New York":   19745289,
-	}
+	name := "Tesla"
+	fmt.Println(name)
 
-	for _, v := range statePopulations {
-		fmt.Println(v)
-	}
+	update(&name)
+	fmt.Println(name)
+
 }
