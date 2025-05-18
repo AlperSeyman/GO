@@ -2,16 +2,20 @@ package main
 
 import "fmt"
 
-func update(name *string) {
-	*name = "Alper"
-}
-
 func main() {
 
-	name := "Tesla"
-	fmt.Println(name)
+	g := greeter{
+		greeting: "Hello",
+		name:     "Alper",
+	}
+	g.greet()
+}
 
-	update(&name)
-	fmt.Println(name)
+type greeter struct {
+	greeting string
+	name     string
+}
 
+func (g greeter) greet() {
+	fmt.Println(g.greeting, g.name)
 }
