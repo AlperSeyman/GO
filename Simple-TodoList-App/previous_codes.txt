@@ -1,0 +1,39 @@
+package main
+
+import "fmt"
+
+
+func main(){
+    goLang := "Study Go Lang"
+	german := "Learn German"
+	sport := "Play Basketball"
+	tasks := []string{goLang, german, sport}
+
+	fmt.Println("####### Welcome to Todolist App! #######")
+	showTasks(tasks)
+	fmt.Println()
+
+	tasks = addTask(tasks, "Speaking German")
+	fmt.Println("Updated List")
+	showTasks(tasks)
+
+	fmt.Println()
+	fmt.Println(tasks)
+
+}
+
+
+
+// function
+func showTasks(tasks []string) {
+	fmt.Println("List of My Todos")
+	for index, task := range tasks {
+		fmt.Printf("%d: %s\n", index+1, task)
+	}
+}
+
+func addTask(tasks []string, newTask string) []string {
+	tasks = append(tasks, newTask)
+	fmt.Printf("New task was added : %s\n", newTask)
+	return tasks
+}
