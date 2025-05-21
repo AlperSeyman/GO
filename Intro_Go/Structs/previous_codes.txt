@@ -1,0 +1,77 @@
+
+
+type MessageToSend struct {
+	phoneNumber int
+	message     string
+}
+
+
+func test(m MessageToSend) {
+	fmt.Printf("Sending message: %s to %v\n", m.message, m.phoneNumber)
+}
+
+
+func main() {
+
+	test(MessageToSend{
+		phoneNumber: 0011223344,
+		message:     "Thanks for signing up",
+	})
+}
+
+
+**************************
+
+
+type wheel struct {
+	Radius   int
+	Material string
+}
+
+
+type car struct {
+	Make       string
+	Model      string
+	Height     int
+	Width      int
+	FrontWheel wheel
+	BackWheel  wheel
+}
+
+
+func main() {
+	myCar := car{}
+	myCar.FrontWheel.Radius = 5
+}
+
+
+***********************
+
+
+type user struct {
+	name   string
+	number int
+}
+
+type messageTosend struct {
+	message   string
+	sender    user
+	recipient user
+}
+
+func canSendMessage(mToSend messageTosend) bool {
+
+	if mToSend.sender.name == "" {
+		return false
+	}
+	if mToSend.recipient.name == "" {
+		return false
+	}
+	if mToSend.sender.number == 0 {
+		return false
+	}
+	if mToSend.recipient.number == 0 {
+		return false
+	}
+	return true
+}
