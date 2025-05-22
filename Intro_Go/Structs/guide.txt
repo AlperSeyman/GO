@@ -1,0 +1,247 @@
+
+
+type MessageToSend struct {
+	phoneNumber int
+	message     string
+}
+
+
+func test(m MessageToSend) {
+	fmt.Printf("Sending message: %s to %v\n", m.message, m.phoneNumber)
+}
+
+
+func main() {
+
+	test(MessageToSend{
+		phoneNumber: 0011223344,
+		message:     "Thanks for signing up",
+	})
+}
+
+
+**************************
+
+
+type wheel struct {
+	Radius   int
+	Material string
+}
+
+
+type car struct {
+	Make       string
+	Model      string
+	Height     int
+	Width      int
+	FrontWheel wheel
+	BackWheel  wheel
+}
+
+
+func main() {
+	myCar := car{}
+	myCar.FrontWheel.Radius = 5
+}
+
+
+**************************
+
+
+type user struct {
+	name   string
+	number int
+}
+
+type messageTosend struct {
+	message   string
+	sender    user
+	recipient user
+}
+
+func canSendMessage(mToSend messageTosend) bool {
+
+	if mToSend.sender.name == "" {
+		return false
+	}
+	if mToSend.recipient.name == "" {
+		return false
+	}
+	if mToSend.sender.number == 0 {
+		return false
+	}
+	if mToSend.recipient.number == 0 {
+		return false
+	}
+	return true
+}
+
+
+**************************
+
+
+// Anonymous Structs //
+
+func main() {
+
+	myCar := struct {
+		Make  string
+		Model string
+	}{
+		Make:  "tesla",
+		Model: "Model 3",
+	}
+
+	fmt.Println(myCar.Make)
+	fmt.Println(myCar.Model)
+}
+
+
+**************************
+
+
+// Nest Anonymous Structs //
+
+type car struct {
+	Make   string
+	Model  string
+	Heigth int
+	Width  int
+	// Wheel is a field containing an anonymous struct
+	Wheel struct {
+		Radius   int
+		Material string
+	}
+}
+
+
+**************************
+
+
+// Embedded Structs //
+
+type car struct {
+	Make  string
+	Model string
+}
+
+type truck struct {
+	// 	"car" is embedded, so the defination of a
+	// 	"truck" now also additionaly contains all
+	//	of the fields of the car struct
+	car
+	carbedSize int
+}
+
+	*** Example ****
+
+type car struct {
+	Make  string
+	Model string
+}
+
+type truck struct {
+	// 	"car" is embedded, so the defination of a
+	// 	"truck" now also additionaly contains all
+	//	of the fields of the car struct
+	car
+	bedSize int
+}
+
+func main() {
+
+	lanesTruck := truck{
+		bedSize: 10,
+		car: car{
+			Make:  "Toyota",
+			Model: "Camry",
+		},
+	}
+
+	fmt.Println(lanesTruck.bedSize)
+
+	// embedded fields promoted to the top-level
+	// instead of lanesTruck.car.make
+	fmt.Println(lanesTruck.Make)
+	fmt.Println(lanesTruck.Model)
+}
+
+
+	*** Example ****
+
+type sender struct {
+	rateLimit int
+	user
+}
+
+type user struct {
+	name   string
+	number int
+}
+
+func test(s sender) {
+	fmt.Println("Sender name: ", s.name)
+	fmt.Println("Sender number: ", s.number)
+	fmt.Println("Sender rate limit: ", s.rateLimit)
+}
+
+func main() {
+
+	test(sender{
+		rateLimit: 5000,
+		user: user{
+			name:   "Sarah",
+			number: 1122334455,
+		},
+	})
+}
+
+
+**************************
+
+
+// Struct Methods //
+
+type rect struct {
+	width  int
+	height int
+}
+
+// area has a receiver of (r rect)
+func (r rect) area() int {
+	return r.height * r.width
+}
+
+func main() {
+
+	r := rect{
+		width:  5,
+		height: 10,
+	}
+
+	fmt.Println(r.area())
+
+}
+
+	*** Example ****
+
+type authenticationInfo struct {
+	username string
+	password string
+}
+
+func (authI authenticationInfo) getBasicAuth() string {
+	return fmt.Sprintf("Authorization: Basic %s:%s", authI.username, authI.password)
+}
+
+func test(authInfo authenticationInfo) {
+	fmt.Println(authInfo.getBasicAuth())
+}
+
+func main() {
+	test(authenticationInfo{
+		username: "Wall",
+		password: "123123123123",
+	})
+}
+
