@@ -1,46 +1,71 @@
 package main
 
-import (
-	"fmt"
-)
+import "fmt"
 
-func sendMessage(msg message) {
-	fmt.Println(msg.getMessage())
+func getExpenReport(e expense) (string, float64) {
+
+	email, ok := e.(email)
+	if ok {
+		return email.toAddress, email.cost()
+	}
+	sms, ok := e.(sms)
+	if ok {
+		return sms.toPhoneNumber, sms.cost()
+	}
+	return "", 0.0
+
 }
 
-type message interface {
-	getMessage() string
+type expense interface {
+	cost() float64
 }
 
-type birthdayMessage struct {
-	birthdayTime int
-	recipentName string
+type printter interface {
+	print()
 }
 
-func (bm birthdayMessage) getMessage() string {
-	return fmt.Sprintf("Hi %s, it is your birthday on %v", bm.recipentName, bm.birthdayTime)
+func (e email) cost() float64 {
+	if !e.isSubscribed {
+		return 0.05 * float64(len(e.body))
+	}
+	return 0.01 * float64(len(e.body))
 }
 
-type sendingReport struct {
-	reportName   string
-	numberOfsend int
+func (s sms) cost() float64 {
+	if !s.isSubscribed {
+		return .1 * float64(len(s.body))
+	}
+	return 0.03 * float64(len(s.body))
 }
 
-func (sr sendingReport) getMessage() string {
-	return fmt.Sprintf("Your %s report is  ready. You've sent %v", sr.reportName, sr.numberOfsend)
+type email struct {
+	isSubscribed bool
+	body         string
+	toAddress    string
+}
+
+type sms struct {
+	isSubscribed  bool
+	body          string
+	toPhoneNumber string
 }
 
 func main() {
 
-	s := sendingReport{
-		reportName:   "first",
-		numberOfsend: 10,
+	e := email{
+		isSubscribed: true,
+		body:         "I want my money back",
+		toAddress:    "aaaaa@bbbbb.com",
 	}
-	sendMessage(s)
 
-	b := birthdayMessage{
-		birthdayTime: 1971,
-		recipentName: "Jansen",
+	sms := sms{
+		isSubscribed:  false,
+		body:          "Confirmation Code",
+		toPhoneNumber: "12113123123",
 	}
-	sendMessage(b)
+
+	fmt.Println(getExpenReport(e))
+	fmt.Println("******************")
+	fmt.Println(getExpenReport(sms))
+
 }
