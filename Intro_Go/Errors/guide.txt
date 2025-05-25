@@ -1,0 +1,110 @@
+
+
+func main() {
+
+	i, err := strconv.Atoi("42b")
+	if err != nil {
+		fmt.Println("could not convert :", err)
+		return
+	}
+	fmt.Println(i)
+
+}
+
+
+****************************
+
+
+func sendSMSToCouple(msgToCustomer, msgToSpouse string) (float64, error) {
+	costForCustomer, err := sendSMS(msgToCustomer)
+	if err != nil {
+		return 0.0, err
+	}
+	costForSpouse, err := sendSMS(msgToSpouse)
+	if err != nil {
+		return 0.0, err
+	}
+	return costForSpouse + costForCustomer, nil
+
+}
+
+func sendSMS(messge string) (float64, error) {
+	const maxTextLen = 25
+	const costPerChar = .0002
+	if len(messge) > maxTextLen {
+		return 0.0, fmt.Errorf("Can't send texts over %v characters", maxTextLen)
+	}
+	return costPerChar * float64(len(messge)), nil
+}
+
+func test(smsForCustomer, smsForSpouse string) {
+	fmt.Println("Message for customer :", smsForCustomer)
+	fmt.Println("Message for spouse :", smsForSpouse)
+	totalPrice, err := sendSMSToCouple(smsForCustomer, smsForSpouse)
+	if err != nil {
+		fmt.Println("Error : ", err)
+		return
+	}
+	fmt.Println("Total Cost :", totalPrice)
+}
+
+func main() {
+
+	smsForCustomer := "Thanks for coming in to our flower shop."
+	smsForSpouse := "We hope you enjoyed your gift."
+
+	test(smsForCustomer, smsForSpouse)
+
+}
+
+
+****************************
+
+
+type userError struct {
+    name string
+}
+
+
+func (e userError) Error() string{
+    fmt.Sprintf("%v has a problem with their account", e.name)
+}
+
+
+****************************
+
+
+type divideError struct {
+	dividend float64
+}
+
+func (de divideError) Error() string {
+	return fmt.Sprintf("can not divide %v by zero", de.dividend)
+}
+
+func divide(dividend, divisor float64) (float64, error) {
+	if divisor == 0 {
+		return 0, divideError{dividend: dividend}
+	}
+	return dividend / divisor, nil
+}
+
+
+****************************
+
+
+func divide(x, y float64) (float64, error) {
+	if y == 0 {
+		return 0.0, errors.New("no dividing by 0")
+	}
+	return x / y, nil
+}
+
+func main() {
+	result, err := divide(2.5, 0)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(result)
+}
