@@ -1,0 +1,74 @@
+
+
+m := make(map[KeyType]ValueType)
+
+    ** Example **
+
+picnicItens := make(map[string]int)
+
+picnicItems["Alice"] = 3
+picnitItems["Bob"] = 2 
+picnicItems["Charlie"] = 5
+
+for person, items := range picnicItems{
+    fmt.Println("%s brought %d items\n, person, items)
+}
+
+
+    ** Example **
+
+type Guest struct {
+	Name         string
+	BringingGift bool
+	FavoriteFood string
+}
+
+func main() {
+	guestBook := make(map[string]Guest)
+
+	guestBook["guest1"] = Guest{Name: "Alice", BringingGift: true, FavoriteFood: "Burger"}
+	guestBook["guest2"] = Guest{Name: "Bob", BringingGift: false, FavoriteFood: "Pizza"}
+	guestBook["guest3"] = Guest{Name: "Charlie", BringingGift: true, FavoriteFood: "Pasta"}
+
+	for _, person := range guestBook {
+		fmt.Printf("Name: %s, Bringing Gift: %v, Favorite Food: %s\n", person.Name, person.BringingGift, person.FavoriteFood)
+	}
+}
+
+
+
+     ** Example **
+
+
+type User struct {
+	Name        string
+	PhoneNumber int
+}
+
+func getUserMap(names []string, phoneNumbers []int) (map[string]User, error) {
+	userMap := make(map[string]User)
+	if len(names) != len(phoneNumbers) {
+		return nil, errors.New("invalid sizes")
+	}
+	for i := 0; i < len(names); i++ {
+		name := names[i]
+		phoneNumber := phoneNumbers[i]
+		userMap[name] = User{Name: name, PhoneNumber: phoneNumber}
+
+	}
+	return userMap, nil
+}
+
+func main() {
+	names := []string{"Alice", "Bob", "Charlie"}
+	phoneNumbers := []int{11111, 22222, 33333}
+
+	users, err := getUserMap(names, phoneNumbers)
+	if err != nil {
+		fmt.Println("Error", err)
+		return
+	}
+	for _, user := range users {
+		fmt.Printf("Name : %s, Phone Number : %d\n", user.Name, user.PhoneNumber)
+	}
+}
