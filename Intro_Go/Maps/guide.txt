@@ -72,3 +72,52 @@ func main() {
 		fmt.Printf("Name : %s, Phone Number : %d\n", user.Name, user.PhoneNumber)
 	}
 }
+
+	** Example ** 
+
+// Nested Map //
+
+map[string]map[string]string
+map[string]map[string]int
+map[rune]map[string]int
+map[int]map[string]map[string]int
+
+hits := make(map[string]map[string]string)
+
+	if hits["user1"] == nil {
+		hits["user1"] = make(map[string]string)
+	}
+
+	hits["user1"]["name"] = "Alper"
+
+	val, ok := hits["user1"]["sname"]
+	if ok {
+		fmt.Println(val)
+	} else {
+		fmt.Println("Not Found")
+	}
+
+	** Example **
+
+func getNameCounts(names []string) map[rune]map[string]int {
+	counts := make(map[rune]map[string]int)
+	for _, name := range names {
+		if len(name) == 0 {
+			continue
+		}
+		firstChar := rune(name[0])
+		_, ok := counts[firstChar]
+		if !ok {
+			counts[firstChar] = make(map[string]int)
+		}
+		counts[firstChar][name]++
+	}
+	return counts
+}
+
+func main() {
+
+	names := []string{"Bily", "Bily", "Bob", "Joe"}
+
+	fmt.Print(getNameCounts(names))
+}
