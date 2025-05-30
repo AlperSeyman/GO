@@ -1,0 +1,159 @@
+
+
+func add(x, y int) int {
+	return x + y
+}
+
+func mul(x, y int) int {
+	return x * y
+}
+
+func aggreate(a, b, c int, operation func(int, int) int) int { // operation is a function. function takes two integer and return int
+	return operation(operation(a, b), c)
+}
+
+func main() {
+
+	fmt.Println(aggreate(2, 3, 4, add))
+	fmt.Println(aggreate(2, 3, 4, mul))
+}
+
+
+
+    ** Example **
+
+func getFormattedMessages(messages []string, formatter func(string) string) []string {
+	formattedMessage := []string{}
+	for _, message := range messages {
+		formattedMessage = append(formattedMessage, formatter(message))
+	}
+	return formattedMessage
+
+}
+
+func addSignature(message string) string {
+	return message + " Kind Regards"
+}
+
+func addGreeting(message string) string {
+	return "Hello " + message
+}
+
+func main() {
+
+	messages := []string{"Alice", "John", "Bob"}
+	for _, message := range getFormattedMessages(messages, addGreeting) {
+		fmt.Println(message)
+	}
+
+}
+
+
+
+// CURRYING 
+
+func multiply(x, y int) int {
+	return x * y
+}
+
+func add(x, y int) int {
+	return x + y
+}
+
+func selfMath(operation func(int, int) int) func(int) int { // selfMaths takes function (operation is a function. function takes two int varaible and return int.)
+	return func(i int) int {                                // return new function. new function takes only single int and return int.
+		return operation(i, i)
+	}
+}
+
+func main() {
+	squareFunc := selfMath(multiply)
+	doubleFunc := selfMath(add)
+
+	fmt.Println(squareFunc(5))
+	fmt.Println(doubleFunc(5))
+}
+
+
+
+    ** Example **
+
+// getLonger takea a function that formats two strings into
+// a single string and returns a function that formats two strings but prints
+// the result instead of returning it
+
+func getLonger(formatter func(string, string) string) func(string, string) {
+	return func(s1 string, s2 string) {
+		fmt.Println(formatter(s1, s2))
+	}
+}
+
+func colonDelimit(first, second string) string {
+	return first + ": " + second
+}
+
+func commoDelimit(first, second string) string {
+	return first + ", " + second
+}
+
+func main() {
+
+	colon_result := getLonger(colonDelimit)
+	commo_result := getLonger(commoDelimit)
+
+	colon_result("5", "five")
+	commo_result("Sully", "Alice")
+
+}
+
+
+
+// CLOSURES
+
+func concatter() func(string) string {
+	doc := ""
+	return func(word string) string {
+		doc = doc + word + " "
+		return doc
+	}
+}
+
+func main() {
+
+	harryPotterAggretor := concatter()
+	harryPotterAggretor("Mr.")
+	harryPotterAggretor("and")
+	harryPotterAggretor("Mrs.")
+	harryPotterAggretor("Dursley")
+
+	fmt.Println(harryPotterAggretor("End"))
+
+}
+
+
+
+    ** Example **
+
+type EmailBill struct {
+	CostInPennies int
+}
+
+func adder() func(int) int {
+	sum := 0
+	return func(i int) int {
+		sum = sum + i
+		return sum
+	}
+
+}
+
+func main() {
+
+	price := EmailBill{
+		CostInPennies: 2,
+	}
+
+	calculate_price := adder()
+	fmt.Println(calculate_price(price.CostInPennies))
+
+}   
