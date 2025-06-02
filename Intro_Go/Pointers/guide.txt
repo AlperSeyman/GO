@@ -1,0 +1,159 @@
+
+
+var p *int
+
+x := 5
+y := x
+z := &x
+*z = 6
+
+fmt.Println(&x) // Value --> 5, Address --> 0xc00000a0e8
+fmt.Println(&y) // Value --> 5, Address --> 0xc00000a100
+fmt.Println(&z) // Value --> 0xc00000a0e8, Address --> 0xc000108058
+fmt.Println(&x) // Value --> 6, Address --> 0xc00000a0e8
+
+
+*************************************
+
+
+var y *int
+x := 50
+y = &x
+*y = 100
+
+
+*************************************
+
+var p *string
+
+s1 := "a"
+s2 := "b"
+
+fmt.Println(s1) --> a
+fmt.Println(s2) --> b
+
+fmt.Println(&s1) --> 0xc0000260a0 address of s1
+fmt.Println(&s2) --> 0xc0000260b0 address of s2
+
+p = &s1
+s1 = *p
+
+fmt.Println(p) --> 0xc0000260a0 address of s1
+fmt.Println(&s1) --> 0xc0000260a0 address of s1
+fmt.Println(&s2) --> 0xc0000260b0 address of s2
+
+fmt.Println(s1) --> a
+fmt.Println(*p) --> a
+fmt.Println(s2) --> a
+
+
+*************************************
+
+
+var myStringPtr *string
+
+myString := "Hello"
+myStringPtr = &myString
+
+*myStringPtr = "World"
+
+
+*************************************
+
+
+// function definition with a pointer argument
+func update(num *int) {
+
+    // dereference the pointer
+    *num = 30
+
+}
+
+func main() {
+ 
+  var number = 55
+
+  // function call
+  update(&number)
+  
+  fmt.Println("The number is", number)
+
+}
+
+
+*************************************
+
+
+func removeProfanity(msg *string) {
+
+	messageVal := *msg
+	messageVal = strings.ReplaceAll(messageVal, "dang", "****")
+	messageVal = strings.ReplaceAll(messageVal, "shoot", "*****")
+	messageVal = strings.ReplaceAll(messageVal, "heck", "****")
+	*msg = messageVal
+}
+
+func test(messages []string) {
+	for _, msg := range messages {
+		removeProfanity(&msg)
+		fmt.Println(msg)
+	}
+}
+
+func main() {
+
+	messages := []string{"Alice dang Snow", "Bob shoot Sea", "Mike heck Short"}
+
+	test(messages)
+
+}
+
+
+*************************************
+
+
+type Car struct {
+	Color string
+}
+
+func (c *Car) setColor(color string) {
+	c.Color = color
+}
+
+func main() {
+
+	car1 := Car{
+		Color: "blue",
+	}
+
+	fmt.Println(car1.Color)
+	car1.setColor("red")
+	fmt.Println(car1.Color)
+
+}
+
+
+*************************************
+
+
+type Circle struct {
+	X, Y, Radius int
+}
+
+func (c *Circle) grow() {
+	c.Radius = c.Radius * 2
+}
+
+func main() {
+
+	c := Circle{
+		X:      1,
+		Y:      2,
+		Radius: 4,
+	}
+
+	fmt.Println(c.Radius)
+	c.grow()
+	fmt.Println(c.Radius)
+
+}
