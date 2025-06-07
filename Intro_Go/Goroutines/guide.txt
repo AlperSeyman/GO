@@ -1,0 +1,261 @@
+
+
+// Channels and Concurrency - Goroutines
+
+
+	// declare a channel of type int
+	ch := make(chan int)
+
+	// to send a value into a channel
+	ch <- 5
+
+	// to receive a value from a channel
+	value := <-ch
+
+
+****************************************
+
+
+func worker(id int, ch chan int) {
+	// Pretend we are doing some work
+	fmt.Printf("Worker %d started\n", id)
+	time.Sleep(time.Second)
+	fmt.Printf("Worker %d finished\n", id)
+	<-ch
+}
+
+func main() {
+
+	ch := make(chan int)
+
+	for i := 1; i <= 5; i++ {
+		go worker(i, ch)
+		ch <- i
+	}
+}
+
+
+****************************************
+
+
+func main() {
+
+	message := make(chan string)
+
+	go func() {
+		time.Sleep(time.Second * 2)
+		message <- "Hello World"
+	}()
+
+	msg := <-message
+
+	fmt.Println(msg)
+
+}
+
+
+****************************************
+
+
+func greeting(message chan string) {
+	time.Sleep(time.Second * 2)
+	message <- "Hello World"
+}
+
+func main() {
+
+	message := make(chan string)
+
+	go greeting(message)
+
+	msg := <-message
+
+	fmt.Println(msg)
+
+}
+
+
+****************************************
+
+	//	range	//
+
+func main() {
+
+	ch := make(chan int, 3)
+	ch <- 1
+	ch <- 2
+	ch <- 3
+	close(ch)
+
+	for v := range ch {
+		fmt.Println(v)
+	}
+}
+
+
+****************************************
+
+	//  select	//
+
+func main() {
+
+	ch1 := make(chan int)
+	ch2 := make(chan int)
+
+	go func() {
+		time.Sleep(time.Second * 1)
+		ch1 <- 1
+	}()
+
+	go func() {
+		time.Sleep(time.Second * 2)
+		ch2 <- 2
+	}()
+
+	for range 2 {
+		select {
+		case msg1 := <-ch1:
+			fmt.Println("Received from ch1:", msg1)
+		case msg2 := <-ch2:
+			fmt.Println("Received from ch2:", msg2)
+		}
+	}
+
+}
+
+
+****************************************
+
+
+
+
+
+****************************************
+
+
+func buyFood(ch chan string) {
+	time.Sleep(2 * time.Second)
+	ch <- "I finished buying food"
+}
+
+func callFriends(ch chan string) {
+	time.Sleep(1 * time.Second)
+	ch <- "I finished calling friends!"
+}
+
+func main() {
+
+	fmt.Println("Picnic plannig started")
+
+	ch := make(chan string)
+
+	go buyFood(ch)
+	go callFriends(ch)
+
+	msg1 := <-ch
+	msg2 := <-ch
+
+	fmt.Println(msg1)
+	fmt.Println(msg2)
+	fmt.Println("All tasks done!")
+}
+
+
+****************************************
+
+
+func packItem(item string, ch chan string) {
+	time.Sleep(2 * time.Second)
+	ch <- "I packed " + item
+}
+
+func main() {
+
+	fmt.Println("Starting picnic packing ")
+
+	ch := make(chan string)
+
+	go packItem("sandwiches", ch)
+	go packItem("apples", ch)
+
+	msg1 := <-ch
+	msg2 := <-ch
+
+	fmt.Println(msg1)
+	fmt.Println(msg2)
+	fmt.Println("All items packed!")
+}
+
+
+****************************************
+
+
+func makeJuice(ch chan string) {
+	time.Sleep(2 * time.Second)
+	ch <- "Juice Made"
+}
+
+func sliceFruit(ch chan string) {
+	time.Sleep(1 * time.Second)
+	ch <- "Fruit scliced"
+}
+
+func main() {
+
+	fmt.Println("Starting picnic prep ")
+
+	ch := make(chan string, 2)
+
+	go makeJuice(ch)
+	go sliceFruit(ch)
+
+	msg1 := <-ch
+	msg2 := <-ch
+
+	fmt.Println(msg1)
+	fmt.Println(msg2)
+	fmt.Println("Prep Done")
+}
+
+
+****************************************
+
+
+type PicnicItem struct {
+	Name     string
+	Quantity int
+}
+
+func packMoreItem(item *PicnicItem, extraQy int, ch chan string) {
+	time.Sleep(1 * time.Second)
+	item.Quantity = item.Quantity + extraQy
+
+	ch <- fmt.Sprintf("Added %d more %s, now we have %d", extraQy, item.Name, item.Quantity)
+}
+
+func main() {
+	fmt.Println("Starting picnic packing.")
+
+	sandwiches := PicnicItem{Name: "sandwiches", Quantity: 5}
+	apples := PicnicItem{Name: "apples", Quantity: 3}
+	water := PicnicItem{Name: "water", Quantity: 2}
+
+	items := []*PicnicItem{&sandwiches, &apples, &water}
+
+	ch := make(chan string, 3)
+
+	go packMoreItem(items[0], 3, ch)
+	go packMoreItem(items[1], 4, ch)
+	go packMoreItem(items[2], 2, ch)
+
+	for i := 0; i < len(items); i++ {
+		message := <-ch
+		fmt.Println(message)
+	}
+
+	for _, item := range items {
+		fmt.Printf("%s : %d\n", item.Name, item.Quantity)
+	}
+
+	fmt.Println("All items packed")
+}
