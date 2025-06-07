@@ -2,24 +2,17 @@ package main
 
 import "fmt"
 
-type Circle struct {
-	X, Y, Radius int
-}
-
-func (c *Circle) grow() {
-	c.Radius = c.Radius * 2
-}
-
 func main() {
 
-	c := Circle{
-		X:      1,
-		Y:      2,
-		Radius: 4,
-	}
+	myNumber := 23
 
-	fmt.Println(c.Radius)
-	c.grow()
-	fmt.Println(c.Radius)
+	var ptr = &myNumber
+
+	fmt.Println("Value of actual pointer", ptr)
+	fmt.Println("Value of actual pointer", *ptr)
+
+	*ptr = *ptr * 2
+
+	fmt.Println("New value is: ", myNumber)
 
 }

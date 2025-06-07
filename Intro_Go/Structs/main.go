@@ -2,22 +2,24 @@ package main
 
 import "fmt"
 
-type authenticationInfo struct {
-	username string
-	password string
-}
-
-func (authI authenticationInfo) getBasicAuth() string {
-	return fmt.Sprintf("Authorization: Basic %s:%s", authI.username, authI.password)
-}
-
-func test(authInfo authenticationInfo) {
-	fmt.Println(authInfo.getBasicAuth())
+type User struct {
+	Name   string
+	Email  string
+	Status bool
+	Age    int
 }
 
 func main() {
-	test(authenticationInfo{
-		username: "Wall",
-		password: "123123123123",
-	})
+
+	user := User{
+		Name:   "Sich",
+		Email:  "moin@mion.com",
+		Status: true,
+		Age:    25,
+	}
+
+	fmt.Println(user)
+	fmt.Printf("User details are %+v\n", user)
+	fmt.Println("Name:", user.Name)
+
 }

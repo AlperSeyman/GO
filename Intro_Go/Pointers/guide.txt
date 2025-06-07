@@ -13,6 +13,22 @@ fmt.Println(&z) // Value --> 0xc00000a0e8, Address --> 0xc000108058
 fmt.Println(&x) // Value --> 6, Address --> 0xc00000a0e8
 
 
+
+*************************************
+
+myNumber := 23
+
+	var ptr = &myNumber
+
+	fmt.Println("Value of actual pointer", ptr)  --> 0xc00000a0e8
+	fmt.Println("Value of actual pointer", *ptr) --> 23
+
+	*ptr = *ptr + 2
+
+	fmt.Println("New value is: ", myNumber) --> 25
+
+
+
 *************************************
 
 

@@ -2,6 +2,8 @@
 
 // Arrays //
 
+
+
 var myInts [10]int
 
 primes := [6]{2, 3, 5, 7, 11, 13}
@@ -41,7 +43,23 @@ func main() {
 }
 
 
+
+************************************
+
+
 // Slices //
+
+courses := []string{"python", "c#", "go", "java"}
+
+fmt.Println(courses)
+
+courses = append(courses[:2], courses[3:]...) // remove a value from slices based on index
+
+fmt.Println(courses)
+
+
+************************************
+
 
 const (
 	planFree = "free"
@@ -94,7 +112,7 @@ func main() {
 }
 
 
-****************************
+************************************
 
 
 // func make([]T, len, cap) 
@@ -104,6 +122,9 @@ mySlice := make([]int, 5, 10)
 mySlice := make([]int, 5)
 
 mySlice := []string("I", "love", "go")
+
+
+************************************
 
 
     ** Example **
@@ -136,6 +157,8 @@ func main() {
 	test(messages)
 }
 
+
+************************************
 
     ** Example **
 
