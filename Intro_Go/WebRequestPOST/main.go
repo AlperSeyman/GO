@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func PerformPostRequest(url string) {
+func PerformPostJsonRequest(url string) {
 
 	// fake json paylod
 	requestBody := strings.NewReader(`
@@ -33,5 +33,5 @@ func PerformPostRequest(url string) {
 
 func main() {
 	fmt.Println("Web Request POST")
-	PerformPostRequest("http://localhost:8000/post")
+	PerformPostJsonRequest("http://localhost:8000/post")
 }
