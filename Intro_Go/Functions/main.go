@@ -2,19 +2,15 @@ package main
 
 import "fmt"
 
-func proAdder(values ...int) (int, string) {
-	total := 0
-
-	for _, value := range values {
-		total += value
-	}
-	return total, "Hi Pro result function"
+func test(x int, y int) (z1 int, z2 int) {
+	defer fmt.Println("hello")
+	z1 = x + y
+	z2 = x - y
+	fmt.Println("before return")
+	return // return z1 and z2
 }
 
 func main() {
-
-	result, myMessage := proAdder(2, 3, 4, 5, 6)
-	fmt.Println(result)
-	fmt.Println(myMessage)
-
+	ans1, ans2 := test(14, 7)
+	fmt.Println(ans1, ans2)
 }
