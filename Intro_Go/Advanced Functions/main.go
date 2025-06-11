@@ -2,26 +2,16 @@ package main
 
 import "fmt"
 
-type EmailBill struct {
-	CostInPennies int
-}
-
-func adder() func(int) int {
-	sum := 0
-	return func(i int) int {
-		sum = sum + i
-		return sum
+func returnFunc(x string) func() {
+	a := "hello"
+	return func() {
+		fmt.Println(a, x)
 	}
-
 }
 
 func main() {
 
-	price := EmailBill{
-		CostInPennies: 2,
-	}
+	result := returnFunc("world")
 
-	calculate_price := adder()
-	fmt.Println(calculate_price(price.CostInPennies))
-
+	result()
 }

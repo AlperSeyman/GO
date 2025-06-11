@@ -1,12 +1,155 @@
 
+func main() {
+
+	test := func() {
+		fmt.Println("hello")
+	}
+
+	test()
+}
+
+*******************************
+
+func main() {
+
+	test := func(x int) {
+		fmt.Println(x)
+	}
+
+	test(4)
+}
+
+*******************************
+
+func main() {
+
+	test := func(x int) int {
+		return x * -1
+	}
+
+	fmt.Println(test(4))
+}
+
+*******************************
+
+func main() {
+
+	test := func(x int) int {
+		return x * -1
+	}(4)
+
+	fmt.Println(test) --> -4
+
+}
+
+*******************************
+
+func main() {
+
+	test := func(x int) int {
+		return x * -1
+	}(4)
+
+	result := test
+	fmt.Println(result) --> -4
+
+}
+
+*******************************
+
+func test(myFunc func(int) int) { // myFunc is a function and it takes integer and return int
+	fmt.Println(myFunc(7))
+}
+
+func main() {
+
+	test2 := func(x int) int {
+		return x - 1
+	}
+	test3 := func(x int) int {
+		return x * 7
+	}
+
+	test(test2) --> 6
+	test(test3) --> 49
+}
+
+******************************
+
+func main() {
+
+	func() {
+		fmt.Println("hello")
+	}()
+
+}
+
+output--> hello
+
+*******************************
+
+func returnFunc(x string) func() {
+	return func() {
+		fmt.Println(x)
+	}
+}
+
+func main() {
+
+	result := returnFunc("hello")
+	result()
+}
+
+*******************************
+
+func returnFunc(x string) func(y string) string {
+	return func(y string) string {
+		return x + " " + y
+	}
+}
+
+func main() {
+
+	first := returnFunc("hello")
+
+	second := first("world")
+
+	fmt.Println(second)
+}
+
+output--> hello world
+
+*******************************
+
+func returnFunc(x string) func() {
+	a := "hello"
+	return func() {
+		fmt.Println(a, x)
+	}
+}
+
+func main() {
+
+	result := returnFunc("world")
+
+	result()
+}
+
+output--> hello world
+
+*******************************
 
 func add(x, y int) int {
 	return x + y
 }
 
+*******************************
+
 func mul(x, y int) int {
 	return x * y
 }
+
+*******************************
 
 func aggreate(a, b, c int, operation func(int, int) int) int { // operation is a function. function takes two integer and return int
 	return operation(operation(a, b), c)
@@ -18,7 +161,7 @@ func main() {
 	fmt.Println(aggreate(2, 3, 4, mul))
 }
 
-
+*******************************
 
     ** Example **
 
@@ -48,7 +191,7 @@ func main() {
 
 }
 
-
+*******************************
 
 // CURRYING 
 
@@ -74,7 +217,7 @@ func main() {
 	fmt.Println(doubleFunc(5))
 }
 
-
+*******************************
 
     ** Example **
 
@@ -106,7 +249,7 @@ func main() {
 
 }
 
-
+*******************************
 
 // CLOSURES
 
@@ -130,7 +273,7 @@ func main() {
 
 }
 
-
+*******************************
 
     ** Example **
 
@@ -156,3 +299,4 @@ func main() {
 	fmt.Println(calculate_price(price.CostInPennies))
 
 }   
+
