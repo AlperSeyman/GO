@@ -1,4 +1,41 @@
 
+x := 7
+y := &x
+fmt.Println(x, y) --> 7 0xc00000a0e8
+*y = 8
+fmt.Println(x, y) --> 8 0xc00000a0e8
+
+
+*************************************
+
+
+var pointer *string
+str := "hello"
+pointer = &str
+fmt.Println(str)
+*pointer = "changed"
+fmt.Println(str)
+
+
+*************************************
+
+
+func changeValue(str *string) {
+	*str = "changed"
+}
+
+func main() {
+
+	str := "hello"
+	fmt.Println(str)
+	changeValue(&str)
+	fmt.Println(str)
+
+}
+
+
+*************************************
+
 
 var p *int
 
@@ -13,8 +50,8 @@ fmt.Println(&z) // Value --> 0xc00000a0e8, Address --> 0xc000108058
 fmt.Println(&x) // Value --> 6, Address --> 0xc00000a0e8
 
 
-
 *************************************
+
 
 myNumber := 23
 
@@ -30,7 +67,6 @@ myNumber := 23
 	fmt.Println("New value is: ", myNumber) --> 25
 
 
-
 *************************************
 
 
@@ -41,6 +77,7 @@ y = &x
 
 
 *************************************
+
 
 var p *string
 
