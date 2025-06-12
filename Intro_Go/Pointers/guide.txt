@@ -28,7 +28,7 @@ func main() {
 
 	str := "hello"
 	fmt.Println(str)
-	changeValue(&str)
+	changeValue(&str) // we give pointer that it point the address.
 	fmt.Println(str)
 
 }
