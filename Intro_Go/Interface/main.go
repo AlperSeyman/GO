@@ -1,71 +1,41 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
-func getExpenReport(e expense) (string, float64) {
-
-	email, ok := e.(email)
-	if ok {
-		return email.toAddress, email.cost()
-	}
-	sms, ok := e.(sms)
-	if ok {
-		return sms.toPhoneNumber, sms.cost()
-	}
-	return "", 0.0
-
+type Shape interface {
+	area() float64
 }
 
-type expense interface {
-	cost() float64
+type Circle struct {
+	radius float64
 }
 
-type printter interface {
-	print()
+type Rect struct {
+	width  float64
+	height float64
 }
 
-func (e email) cost() float64 {
-	if !e.isSubscribed {
-		return 0.05 * float64(len(e.body))
-	}
-	return 0.01 * float64(len(e.body))
+func (r Rect) area() float64 {
+	return r.width * r.height
 }
 
-func (s sms) cost() float64 {
-	if !s.isSubscribed {
-		return .1 * float64(len(s.body))
-	}
-	return 0.03 * float64(len(s.body))
+func (c Circle) area() float64 {
+	return math.Pi * c.radius * c.radius
 }
 
-type email struct {
-	isSubscribed bool
-	body         string
-	toAddress    string
-}
-
-type sms struct {
-	isSubscribed  bool
-	body          string
-	toPhoneNumber string
+func getArea(s Shape) float64 {
+	return s.area()
 }
 
 func main() {
 
-	e := email{
-		isSubscribed: true,
-		body:         "I want my money back",
-		toAddress:    "aaaaa@bbbbb.com",
-	}
+	c1 := Circle{radius: 4.5}
+	r1 := Rect{width: 5, height: 7}
 
-	sms := sms{
-		isSubscribed:  false,
-		body:          "Confirmation Code",
-		toPhoneNumber: "12113123123",
-	}
+	shapes := []Shape{c1, r1}
 
-	fmt.Println(getExpenReport(e))
-	fmt.Println("******************")
-	fmt.Println(getExpenReport(sms))
-
+	fmt.Println(getArea(shapes[0]))
 }
