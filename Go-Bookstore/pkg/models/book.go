@@ -26,14 +26,27 @@ func GetAllBooks() []Book {
 	return books
 }
 
-func GetByIdBook(id uint) (*Book, *gorm.DB) {
+func GetByIdBook(id uint) (*Book, error) {
 	var book Book
-	db := db.First(&book, id)
-	return &book, db
+	result := db.First(&book, id)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &book, nil
+}
+
+func DeleteByIdBook(id uint) (*Book, error) {
+	var book Book
+	result := db.First(&book, id)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	db.Delete(&book, id)
+	return &book, nil
 }
 
 // CreateBook creates a new book record in DB
-func (b *Book) CreateBook() *Book {
-	db.Create(*b)
-	return b
+func (book *Book) CreateBook() *Book {
+	db.Create(*book)
+	return book
 }
