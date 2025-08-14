@@ -18,8 +18,8 @@ DeletedAt gorm.DeletedAt `gorm:"index"`
 
 type Lead struct {
 	gorm.Model
-	Name    string
-	Company *string // pointer to a string; allowing for null values
-	Email   *string
-	Phone   int
+	Name    string `json:"name"`
+	Company string `json:"company"` // pointer to a string; allowing for null values
+	Email   string `json:"email"`
+	Phone   int    `json:"phone"`
 }

@@ -10,7 +10,7 @@ func setupRoutes(app *fiber.App) {
 	app.Get("/api/v1/lead", lead.GetLeads)
 	app.Get("/api/v1/lead/:id", lead.GetLead)
 	app.Post("/api/v1/lead", lead.NewLead)
-	app.Patch("/api/v1/lead/:id", lead.UpdateLead)
+	app.Put("/api/v1/lead/:id", lead.UpdateLead)
 	app.Delete("/api/v1/lead/:id", lead.DeleteLead)
 }
 

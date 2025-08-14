@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/AlperSeyman/fiber-crm-basic/models"
-	"gorm.io/driver/sqlite"
+	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 )
 
