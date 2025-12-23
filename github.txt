@@ -1,0 +1,22 @@
+git config --global init.defaultBranch new_branch_name -> git config --global init.defaultBranch tesla
+
+git init -> Creates a new, empty Git repository. It’s like telling Git, "Start watching this folder for changes"
+
+git branch -m branch_name -> git branch -m main -> Renames your current branch. If you are on a branch named master and want it to be main, this command renames it instantly
+
+git status -> The "Check-in": Shows which files have changed and if they are ready to be saved.
+
+git add file_name -> git add data.txt -> Tells Git: "I want to include data.txt in my next save."
+
+git add . -> Tells Git: "Take everything I've changed and get it ready to save."
+
+git commit -m "what did you do ?" -> git commit -m "add data.txt file."
+ 
+git remote add origin repo_link -> git remote add origin git@github.com:adada/testrepo.git
+
+git remove -v 
+
+git remote get-url origin
+
+git push -u origin main branch_name
+
