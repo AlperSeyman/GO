@@ -1,8 +1,8 @@
-package basic
+package basics
 
 import "fmt"
 
-func basic() {
+func main() {
 
 	// var arrayName [size]elementType
 

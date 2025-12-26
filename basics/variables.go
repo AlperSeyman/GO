@@ -9,5 +9,3 @@ func main() {
 	// Pointers, slices, maps, functions, and structs: nil
 
 }
-
-ctrl + ö

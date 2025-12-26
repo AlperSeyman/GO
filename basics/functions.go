@@ -1,8 +1,8 @@
-package basic
+package basics
 
 import "fmt"
 
-func basics() {
+func main() {
 
 	// func <name>(parameters list) returnType {
 	// code block
