@@ -2,7 +2,7 @@ package basic
 
 import "fmt"
 
-func main() {
+func basic() {
 
 	// var arrayName [size]elementType
 
