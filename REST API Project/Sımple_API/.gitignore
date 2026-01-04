@@ -1,0 +1,14 @@
+# Security files (NEVER PUSH THESE)
+*.pem
+*.key
+*.crt
+
+# Go binaries
+*.exe
+*.exe~
+__debug_bin
+Simple_API
+
+# OS files
+.DS_Store
+Thumbs.db
