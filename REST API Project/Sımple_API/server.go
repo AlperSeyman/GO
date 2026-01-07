@@ -32,7 +32,7 @@ func main() {
 	// Configure TLS
 	tlsConfig := &tls.Config{
 		ClientAuth: tls.RequireAndVerifyClientCert, // turns on mTLS
-		ClientCAs:  loadClienCAs(),                 // List of trusted client IDs
+		ClientCAs:  loadClientCAs(),                // List of trusted client IDs
 		MinVersion: tls.VersionTLS13,
 	}
 
@@ -87,7 +87,7 @@ func getTLSVersion(version uint16) string {
 	}
 }
 
-func loadClienCAs() *x509.CertPool { // CertPool store and manage a collection of Trusted Certificates.
+func loadClientCAs() *x509.CertPool { // CertPool store and manage a collection of Trusted Certificates.
 
 	clientCAs := x509.NewCertPool() // hold certificates trust
 
