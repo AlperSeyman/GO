@@ -9,6 +9,9 @@
 __debug_bin
 Simple_API
 
+# OpenSSL Configuration
+openssl.cnf
+
 # OS files
 .DS_Store
 Thumbs.db

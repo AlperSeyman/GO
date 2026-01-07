@@ -1,0 +1,27 @@
+
+--- HTTP/1.1 ---
+
+* Connection Behavior
+    - New Connection for Each Request
+    - Connection Reuse
+    - Connection Closure
+
+* Performance Considerations
+    - Latency
+    - Resource Consumption
+
+
+
+--- HTTPS (HTTP over TLS/SSL) ---
+
+* Connection Behavior
+    - TLS Handshake
+    - Persistent Connection
+    - HTTP/1.1 Considerations
+
+* Performance Considerations
+    - Latency
+    - Connection Resumption
+
+
+
