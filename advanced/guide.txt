@@ -1,0 +1,11 @@
+
+
+* Sequential (No Goroutines): One chef cooks the burger, then waits for it to finish. Then they cook the fries.
+                            Then they pour the drink. The line of customers moves very slowly.
+
+
+* Goroutines: One chef starts the burger, then immediately starts the fries,
+            then immediately pours the drink. Everything is happening at once.
+
+
+
