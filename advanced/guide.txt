@@ -8,4 +8,9 @@
             then immediately pours the drink. Everything is happening at once.
 
 
+* Multiplexing: A method that sends many different signals or messages through one single path at the same time.
+                Instead of building a separate wire for every task, it shares one connection to make the system more efficient and cheaper.
+                Think of it like a single highway with many lanes that allows different cars to reach their destinations simultaneously.
 
+
+*
