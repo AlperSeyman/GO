@@ -1,11 +1,11 @@
 
 
 * Sequential (No Goroutines): One chef cooks the burger, then waits for it to finish. Then they cook the fries.
-                            Then they pour the drink. The line of customers moves very slowly.
+                              Then they pour the drink. The line of customers moves very slowly.
 
 
 * Goroutines: One chef starts the burger, then immediately starts the fries,
-            then immediately pours the drink. Everything is happening at once.
+              then immediately pours the drink. Everything is happening at once.
 
 
 * Multiplexing: A method that sends many different signals or messages through one single path at the same time.
@@ -13,4 +13,6 @@
                 Think of it like a single highway with many lanes that allows different cars to reach their destinations simultaneously.
 
 
-*
+* Channel: A safe "communication pipe" that allows different parts of a program (Goroutines) to share information with each other.
+           It works by letting one part of the program send data and another part receive it, which keeps the data organized.
+           By using channels, you ensure that your tasks can talk to each other safely without causing mistakes or crashes.
