@@ -16,3 +16,9 @@
 * Channel: A safe "communication pipe" that allows different parts of a program (Goroutines) to share information with each other.
            It works by letting one part of the program send data and another part receive it, which keeps the data organized.
            By using channels, you ensure that your tasks can talk to each other safely without causing mistakes or crashes.
+
+
+* Unbuffered: There is no storage, so the sender and receiver must wait for each other to finish the transfer.
+
+* Buffering: The channel has a small amount of memory to hold data,
+             allowing the sender to continue working even if the receiver is busy
