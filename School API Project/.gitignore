@@ -1,0 +1,44 @@
+# --- Binaries & Executables ---
+# Compiled files should not be in Git
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+
+# --- Go Specific ---
+# Test binaries and coverage reports
+*.test
+*.out
+*.coverprofile
+profile.cov
+coverage.*
+
+# Go workspace and vendor (optional)
+go.work
+go.work.sum
+# vendor/
+
+# --- Environment & Configuration ---
+# Local secrets and config files
+.env
+openssl.cnf
+
+# --- Security & Certificates ---
+# NEVER push private keys or certificates to GitHub
+*.pem
+*.key
+*.crt
+*.csr
+
+# --- Editor/IDE ---
+# Personal IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- OS Specific ---
+.DS_Store
+Thumbs.db
