@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"log"
 	"net/http"
@@ -70,13 +71,31 @@ func main() {
 
 	port := ":3000"
 
-	http.HandleFunc("/", rootHandler)
-	http.HandleFunc("/teachers/", teachersHandler)
-	http.HandleFunc("/students/", studentsHandler)
-	http.HandleFunc("/execs/", execsHandler)
+	mux := http.NewServeMux()
+
+	// Load the TLS cert and key
+	cert := "cert.pem"
+	key := "key.pem"
+
+	mux.HandleFunc("/", rootHandler)
+	mux.HandleFunc("/teachers/", teachersHandler)
+	mux.HandleFunc("/students/", studentsHandler)
+	mux.HandleFunc("/execs/", execsHandler)
+
+	// Configure TLS
+	tlsConfig := &tls.Config{
+		MinVersion: tls.VersionTLS13,
+	}
+
+	// Create a custom server
+	server := &http.Server{
+		Addr:      port,
+		Handler:   mux,
+		TLSConfig: tlsConfig,
+	}
 
 	fmt.Println("Server is running on port:", port)
-	err := http.ListenAndServe(port, nil)
+	err := server.ListenAndServeTLS(cert, key)
 	if err != nil {
 		log.Fatalln("Error starting the server", err)
 	}
