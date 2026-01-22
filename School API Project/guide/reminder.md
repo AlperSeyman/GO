@@ -98,11 +98,8 @@ func main() {
 	if err != nil {
 		log.Fatalln("Error starting the server", err)
 	}
-}
 
-
-
-// Path Params
+	// Path Params
 	// teachers/{id} -> teachers/9
 	fmt.Println(r.URL.Path)
 	path := strings.TrimPrefix(r.URL.Path, "/teachers/")
@@ -110,9 +107,10 @@ func main() {
 	userID := strings.TrimPrefix(path, "/")
 	fmt.Println("The User ID:", userID)
 
-// Query Params
+	// Query Params
 	// teachers/?key=value -> teachers/?name=Jhon&age=25
 	fmt.Println(r.URL.Query())
 	queryParams := r.URL.Query()
 	name := queryParams.Get("name")
 	fmt.Println(name)
+}
