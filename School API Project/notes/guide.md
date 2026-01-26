@@ -67,3 +67,11 @@ Referrer-Policy: no-referrer
     Where it goes: It wraps around your Router (Mux).
 
     Key Header: Access-Control-Allow-Origin tells the browser which websites are "friends."
+
+6. Origins
+
+    The unique identity of a website. It consists of the Protocol Domai + Port.
+
+    Same Origin: Everything matches perfectly.
+
+    Cross-Origin: At least one part (like the port) is different. This requires CORS middleware to allow communication
