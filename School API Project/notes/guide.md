@@ -24,6 +24,14 @@
 
 4. Security Headers
 
+Headers:
+
+    Definition: Extra information sent with every request and response.
+
+    Analogy: Like the "Label" on a package that tells you who sent it and what is inside.
+
+    Purpose: Used for security (Auth), identifying data types (Content-Type), and permissions (CORS).
+
 X-Frame-Options: deny
 
     What it does: It prevents other websites from putting your website inside an <iframe> (a window inside another site).
@@ -70,8 +78,56 @@ Referrer-Policy: no-referrer
 
 6. Origins
 
-    The unique identity of a website. It consists of the Protocol Domai + Port.
+    Origin is the "address" of a website. It is made of three specific parts:
+
+    Protocol (e.g., http or https)
+
+    Domain (e.g., localhost or google.com)
+
+    Port (e.g., :3000 or :8080)
+
+    https://localhost:8080
+
+    Two URLs have the same origin only if all three parts are exactly the same.
+
+    The unique identity of a website. It consists of the Protocol Domain + Port.
 
     Same Origin: Everything matches perfectly.
 
     Cross-Origin: At least one part (like the port) is different. This requires CORS middleware to allow communication
+
+Access-Control-Allow-Headers
+
+    The Problem: By default, browsers only allow very simple headers (like "Text").
+
+    The Solution: This line gives the Frontend permission to send extra information.
+
+    Content-Type: Allows the Frontend to say, "I am sending you JSON data"
+
+    Authorization: Allows the Frontend to send a Secret Token or Password to log in.
+
+    Without this: Your API will never receive the JSON body or the user's login token.
+
+Access-Control-Allow-Methods
+
+    The Problem: Browsers are afraid that a random website might try to DELETE your data.
+
+    The Solution: Listing the "Verbs" (Actions) that are safe to use.
+
+        GET: Read data.
+
+        POST: Create new data.
+
+        PUT/PATCH: Update data.
+
+        DELETE: Remove data.
+
+    Without this: The browser will block any request that isn't a simple GET
+
+Access-Control-Allow-Credentials
+
+    The Problem: Usually, browsers do not send "Private" data (like Cookies or Session IDs) to a different origin for security.
+
+    The Solution: By setting this to "true", you are saying: "I trust this connection. You can send me the user's private Cookies or Login session."
+
+    Important: If you set this to true, you cannot use * for your Origin. You must name the specific website (like http://localhost:5173).
