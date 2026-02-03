@@ -2,15 +2,111 @@ package main
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
-type user struct {
-	Name string `json:"name"`
-	Age  string `json:"age"`
-	City string `json:"city"`
+type Teacher struct {
+	ID        int
+	FirstName string
+	LastName  string
+	Class     string
+	Subject   string
+}
+
+type Response struct {
+	Status string    `json:"status"`
+	Count  int       `json:"count"`
+	Data   []Teacher `json:"data"`
+}
+
+var (
+	teachers = make(map[int]Teacher)
+	// mutex    = &sync.Mutex{} // Prevents data corruption by locking shared resources.
+	nextID = 1
+)
+
+func init() {
+
+	teachers[nextID] = Teacher{
+		ID:        nextID,
+		FirstName: "John",
+		LastName:  "Doe",
+		Class:     "9A",
+		Subject:   "Math",
+	}
+	nextID++
+	teachers[nextID] = Teacher{
+		ID:        nextID,
+		FirstName: "Jane",
+		LastName:  "Smith",
+		Class:     "10A",
+		Subject:   "Algebra",
+	}
+	nextID++
+	teachers[nextID] = Teacher{
+		ID:        nextID,
+		FirstName: "Jane",
+		LastName:  "Doe",
+		Class:     "12C",
+		Subject:   "Biology",
+	}
+}
+
+func getAllTeachers(w http.ResponseWriter, r *http.Request) {
+
+	// Queris
+	firstName := r.URL.Query().Get("first-name")
+	lastName := r.URL.Query().Get("last-name")
+
+	teacherList := make([]Teacher, 0, len(teachers))
+	for _, teacher := range teachers {
+		if (firstName == "" || teacher.FirstName == firstName) && (lastName == "" || teacher.LastName == lastName) {
+			teacherList = append(teacherList, teacher)
+		}
+	}
+
+	response := Response{
+		Status: "success",
+		Count:  len(teacherList),
+		Data:   teacherList,
+	}
+	w.Header().Set("Content-Type", "application/json")
+
+	json.NewEncoder(w).Encode(response)
+}
+
+func getTeacherById(w http.ResponseWriter, r *http.Request, idStr string) {
+
+	if idStr == "" {
+		getAllTeachers(w, r)
+	} else {
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			http.Error(w, "Invalid ID: ID must be a number", http.StatusBadRequest)
+			return
+		}
+		teacher, exists := teachers[id]
+		if !exists {
+			http.Error(w, "Teacher not found", http.StatusFound)
+			return
+		}
+		json.NewEncoder(w).Encode(teacher)
+	}
+}
+
+func getTeachersHandler(w http.ResponseWriter, r *http.Request) {
+
+	path := strings.TrimPrefix(r.URL.Path, "/teachers/")
+	if path == "" {
+		getAllTeachers(w, r)
+	} else {
+		getTeacherById(w, r, path)
+	}
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
@@ -23,7 +119,8 @@ func teachersHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		w.Write([]byte("GET Method on Teachers Route Page"))
+		// call get method handler function
+		getTeachersHandler(w, r)
 	case http.MethodPost:
 		w.Write([]byte("POST Method on Teachers Route Page"))
 	case http.MethodPut:
@@ -91,7 +188,7 @@ func main() {
 	server := &http.Server{
 		Addr:    port,
 		Handler: mux,
-		// Handler:   middlewares.SecurityHeaders(mux),
+		// Handler: middlewares.SecurityHeaders(middlewares.CORSMiddleware(mux)),
 		// Handler:   middlewares.CORSMiddleware(mux),
 		TLSConfig: tlsConfig,
 	}
