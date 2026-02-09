@@ -5,12 +5,19 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"restapi/internal/api/routers"
+	"restapi/internal/repository/sqlconnect"
 )
 
 func main() {
 
-	port := ":3000"
+	_, err := sqlconnect.ConnectDB()
+	if err != nil {
+		fmt.Println("Error------: ", err)
+	}
+
+	port := os.Getenv("SERVER_PORT")
 
 	// Load the TLS cert and key
 	cert := "cert.pem"
@@ -31,7 +38,7 @@ func main() {
 	}
 
 	fmt.Println("Server is running on port:", port)
-	err := server.ListenAndServeTLS(cert, key)
+	err = server.ListenAndServeTLS(cert, key)
 	if err != nil {
 		log.Fatalln("Error starting the server", err)
 	}
