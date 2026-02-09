@@ -1,0 +1,38 @@
+SHOW databases;
+
+CREATE DATABASE test_database;
+
+USE test_database;
+
+CREATE TABLE my_table(id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(50), age INT);
+
+SHOW tables;
+
+// add
+INSERT INTO my_table(name, age) VALUES("John Doe", 30),("Jane Doe", 25),("Jack Doe", 10);
+
+// read
+SELECT * FROM my_table;
+
+SELECT * FROM my_table WHERE age > 20;
+
+// update
+UPDATE my_table SET age = 40 WHERE id = 1;
+
+UPDATE my_table SET age = age + 1 WHERE age < 30;
+
+// delete
+DELETE FROM my_table WHERE id = 1;
+
+DELETE FROM my_table WHERE age = 11;
+
+DELETE FROM my_table WHERE age = 11;
+
+
+// rename
+RENAME TABLE my_table TO new_table;
+
+DROP TABLE new_table;
+
+DROP DATABASE test_database;
+
