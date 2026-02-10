@@ -2,6 +2,7 @@ SHOW databases;
 
 CREATE DATABASE test_database;
 
+
 USE test_database;
 
 CREATE TABLE my_table(id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(50), age INT);
@@ -36,3 +37,18 @@ DROP TABLE new_table;
 
 DROP DATABASE test_database;
 
+
+
+// creata new database
+
+create table if not exists school;
+use school;
+create table if not exists teachers(
+    id int auto_increment,
+    first_name varchar(255) not null,
+    last_name varchar(255) not null,
+    email varchar(255) not null unique,
+    class varchar(255) not null,
+    subject varchar(255) not null,
+    index(email)
+)AUTO_INCREMENT=100;
