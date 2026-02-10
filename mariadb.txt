@@ -41,7 +41,7 @@ DROP DATABASE test_database;
 
 // creata new database
 
-create table if not exists school;
+create database if not exists school;
 use school;
 create table if not exists teachers(
     id int auto_increment primary key,
