@@ -44,7 +44,7 @@ DROP DATABASE test_database;
 create table if not exists school;
 use school;
 create table if not exists teachers(
-    id int auto_increment,
+    id int auto_increment primary key,
     first_name varchar(255) not null,
     last_name varchar(255) not null,
     email varchar(255) not null unique,
