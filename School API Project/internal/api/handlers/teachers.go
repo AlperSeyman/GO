@@ -33,19 +33,13 @@ func getAllTeachers(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	// Queries
-	firstName := r.URL.Query().Get("first-name")
-	lastName := r.URL.Query().Get("last-name")
+	// firstName := r.URL.Query().Get("first-name")
+	// lastName := r.URL.Query().Get("last-name")
 
-	query := "SELECT * FROM teachers WHERE 1=1"
+	query := "SELECT * FROM teachers WHERE 1=1" // first_name, last_name, email, class, subject from teachers .....
 	var args []any
-	if firstName != "" {
-		query += " AND first_name=?"
-		args = append(args, firstName)
-	}
-	if lastName != "" {
-		query += " AND last_name=?"
-		args = append(args, lastName)
-	}
+
+	query, args = queryFunc(r, query, args)
 
 	rows, err := db.Query(query, args...)
 	if err != nil {
@@ -196,4 +190,51 @@ func TeachersHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		w.Write([]byte("Teachers Route Page"))
 	}
+}
+
+// Helper Functions
+
+func queryFunc(r *http.Request, query string, args []any) (string, []any) {
+
+	params := map[string]string{
+		"first_name": "first_name",
+		"last_name":  "last_name",
+		"emai":       "email",
+		"class":      "class",
+		"subject":    "subject",
+	}
+
+	for param, dbFied := range params {
+		value := r.URL.Query().Get(param)
+		if value != "" {
+			query += " AND " + dbFied + " = ?"
+			args = append(args, value)
+		}
+	}
+	return query, args
+
+	// params := map[string]string{
+	// 	"first_name": "first_name",
+	// 	"last_name":  "last_name",
+	// 	"email":      "email",
+	// 	"class":      "class",
+	// 	"subject":    "subject",
+	// }
+
+	// for param, dbField := range params {
+	// 	value := r.URL.Query().Get(param)
+	// 	if value != "" {
+	// 		query += " AND " + dbField + " = ?"
+	// 		args = append(args, value)
+	// 	}
+	// }
+
+	// if firstName != "" {
+	// 	query += " AND first_name=?"
+	// 	args = append(args, firstName)
+	// }
+	// if lastName != "" {
+	// 	query += " AND last_name=?"
+	// 	args = append(args, lastName)
+	// }
 }
