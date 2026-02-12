@@ -39,7 +39,11 @@ func getAllTeachers(w http.ResponseWriter, r *http.Request) {
 	query := "SELECT * FROM teachers WHERE 1=1" // first_name, last_name, email, class, subject from teachers .....
 	var args []any
 
+	// filtering
 	query, args = queryFunc(r, query, args)
+
+	// sorting
+	query = sortFunc(r, query)
 
 	rows, err := db.Query(query, args...)
 	if err != nil {
@@ -194,7 +198,7 @@ func TeachersHandler(w http.ResponseWriter, r *http.Request) {
 
 // Helper Functions
 
-func queryFunc(r *http.Request, query string, args []any) (string, []any) {
+func queryFunc(r *http.Request, query string, args []any) (string, []any) { // add filters
 
 	params := map[string]string{
 		"first_name": "first_name",
@@ -237,4 +241,42 @@ func queryFunc(r *http.Request, query string, args []any) (string, []any) {
 	// 	query += " AND last_name=?"
 	// 	args = append(args, lastName)
 	// }
+}
+
+func isValidSortOrder(order string) bool {
+	return order == "asc" || order == "desc"
+}
+
+func isValidSortField(field string) bool {
+	validField := map[string]bool{
+		"first_name": true,
+		"last_name":  true,
+		"email":      true,
+		"class":      true,
+		"subject":    true,
+	}
+
+	return validField[field]
+}
+
+func sortFunc(r *http.Request, query string) string { // add sorting
+	sortParams := r.URL.Query()["sortby"]
+	if len(sortParams) > 0 {
+		query += " ORDER BY"
+		for i, param := range sortParams {
+			parts := strings.Split(param, ":")
+			if len(parts) > 2 {
+				continue
+			}
+			field, order := parts[0], parts[1]
+			if !isValidSortOrder(field) || !isValidSortField(order) {
+				continue
+			}
+			if i > 0 {
+				query += " ,"
+			}
+			query += " " + field + " " + order
+		}
+	}
+	return query
 }
