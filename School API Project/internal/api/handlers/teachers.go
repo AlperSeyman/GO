@@ -17,12 +17,6 @@ type Response struct {
 	Data   []model.Teacher `json:"data"`
 }
 
-var (
-// teachers = make(map[int]model.Teacher)
-// mutex    = &sync.Mutex{} // Prevents data corruption by locking shared resources. Using for 'post' method.
-// nextID = 1
-)
-
 func getAllTeachers(w http.ResponseWriter, r *http.Request) {
 
 	db, err := sqlconnect.ConnectDB()
@@ -36,7 +30,7 @@ func getAllTeachers(w http.ResponseWriter, r *http.Request) {
 	// firstName := r.URL.Query().Get("first-name")
 	// lastName := r.URL.Query().Get("last-name")
 
-	query := "SELECT * FROM teachers WHERE 1=1" // first_name, last_name, email, class, subject from teachers .....
+	query := "SELECT id, first_name, last_name, email, class, subject FROM teachers WHERE 1=1"
 	var args []any
 
 	// filtering
@@ -94,7 +88,7 @@ func getTeacherById(w http.ResponseWriter, r *http.Request, idStr string) {
 		}
 
 		var teacher model.Teacher
-		query := "SELECT * FROM teachers WHERE id = ?"
+		query := "SELECT id, first_name, last_name, email, class, subject FROM teachers WHERE id = ?"
 		err = db.QueryRow(query, id).Scan(
 			&teacher.ID,
 			&teacher.FirstName,
@@ -174,9 +168,65 @@ func addTeacherHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(response)
-
 }
 
+// put method --> /teachers/{teacher_id}
+func updateTeacherHandler(w http.ResponseWriter, r *http.Request) {
+
+	db, err := sqlconnect.ConnectDB()
+	if err != nil {
+		http.Error(w, "Eror connecting to database", http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	idStr := strings.TrimPrefix(r.URL.Path, "/teachers/")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid Teacher ID", http.StatusBadRequest)
+		return
+	}
+
+	var updatedTeacher model.Teacher
+	err = json.NewDecoder(r.Body).Decode(&updatedTeacher)
+	if err != nil {
+		http.Error(w, "Invalid Request Payload", http.StatusBadRequest)
+		return
+	}
+
+	var existingTeacher model.Teacher
+	query := "SELECT id, first_name, last_name, email, class, subject FROM teachers WHERE id = ?"
+	err = db.QueryRow(query, id).Scan(
+		&existingTeacher.ID,
+		&existingTeacher.FirstName,
+		&existingTeacher.LastName,
+		&existingTeacher.Email,
+		&existingTeacher.Class,
+		&existingTeacher.Subject,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, "Teacher not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Unable to retrieve data", http.StatusInternalServerError)
+		return
+	}
+
+	updatedTeacher.ID = existingTeacher.ID
+
+	query = "UPDATE teachers SET first_name=?, last_name=?, email=?, class=?, subject=? WHERE id=?"
+
+	_, err = db.Exec(query, updatedTeacher.FirstName, updatedTeacher.LastName, updatedTeacher.Email, updatedTeacher.Class, updatedTeacher.Subject, updatedTeacher.ID)
+	if err != nil {
+		http.Error(w, "Error updating teacher", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(updatedTeacher)
+}
+
+// teacher handler
 func TeachersHandler(w http.ResponseWriter, r *http.Request) {
 	// fmt.Fprintf(w, "Main Page")
 
@@ -188,7 +238,8 @@ func TeachersHandler(w http.ResponseWriter, r *http.Request) {
 		// call post method handler function
 		addTeacherHandler(w, r)
 	case http.MethodPut:
-		w.Write([]byte("PUT Method on Teachers Route Page"))
+		// call put method handler function
+		updateTeacherHandler(w, r)
 	case http.MethodDelete:
 		w.Write([]byte("DELETE Method on Teachers Route Page"))
 	default:
@@ -197,7 +248,6 @@ func TeachersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Helper Functions
-
 func queryFunc(r *http.Request, query string, args []any) (string, []any) { // add filters
 
 	params := map[string]string{
