@@ -17,6 +17,7 @@ type Response struct {
 	Data   []model.Teacher `json:"data"`
 }
 
+// get methed --> /teachers/
 func getAllTeachers(w http.ResponseWriter, r *http.Request) {
 
 	db, err := sqlconnect.ConnectDB()
@@ -69,6 +70,7 @@ func getAllTeachers(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+// get method --> /teachers/{teacher_id}
 func getTeacherById(w http.ResponseWriter, r *http.Request, idStr string) {
 
 	db, err := sqlconnect.ConnectDB()
@@ -119,7 +121,8 @@ func getTeachersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func addTeacherHandler(w http.ResponseWriter, r *http.Request) {
+// post method --> create a new teacher
+func addTeachersHandler(w http.ResponseWriter, r *http.Request) {
 
 	db, err := sqlconnect.ConnectDB()
 	if err != nil {
@@ -171,7 +174,7 @@ func addTeacherHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // put method --> /teachers/{teacher_id}
-func updateTeacherHandler(w http.ResponseWriter, r *http.Request) {
+func updateTeachersHandler(w http.ResponseWriter, r *http.Request) {
 
 	db, err := sqlconnect.ConnectDB()
 	if err != nil {
@@ -226,6 +229,92 @@ func updateTeacherHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(updatedTeacher)
 }
 
+// patch method --> /teachers/{teacher_id}
+func patchUpdateTeachersHandler(w http.ResponseWriter, r *http.Request) {
+
+	db, err := sqlconnect.ConnectDB()
+	if err != nil {
+		http.Error(w, "Error connecting to database", http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	idStr := strings.TrimPrefix(r.URL.Path, "/teachers/")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid Teacher ID", http.StatusBadRequest)
+		return
+	}
+
+	var updatedTeacher map[string]any
+	err = json.NewDecoder(r.Body).Decode(&updatedTeacher)
+	if err != nil {
+		http.Error(w, "Invalid Request Payload", http.StatusBadRequest)
+		return
+	}
+
+	var existingTeacher model.Teacher
+	query := "SELECT id, first_name, last_name, email, class, subject FROM teachers WHERE id = ?"
+	err = db.QueryRow(query, id).Scan(
+		&existingTeacher.ID,
+		&existingTeacher.FirstName,
+		&existingTeacher.LastName,
+		&existingTeacher.Email,
+		&existingTeacher.Class,
+		&existingTeacher.Subject,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, "Teacher not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Unable to retrieve data", http.StatusInternalServerError)
+		return
+	}
+
+	// apply update
+	for field, value := range updatedTeacher {
+
+		strValue, ok := value.(string)
+		if !ok {
+			http.Error(w, "Invalid data type: expected text", http.StatusBadRequest)
+			return
+		}
+
+		switch field {
+		case "first_name":
+			existingTeacher.FirstName = strValue
+		case "last_name":
+			existingTeacher.LastName = strValue
+		case "email":
+			existingTeacher.Email = strValue
+		case "class":
+			existingTeacher.Class = strValue
+		case "subject":
+			existingTeacher.Subject = strValue
+		}
+	}
+
+	query = "UPDATE teachers SET first_name=?, last_name=?, email=?, class=?, subject=? WHERE id=?"
+	_, err = db.Exec(
+		query,
+		existingTeacher.FirstName,
+		existingTeacher.LastName,
+		existingTeacher.Email,
+		existingTeacher.Class,
+		existingTeacher.Subject,
+		existingTeacher.ID,
+	)
+	if err != nil {
+		http.Error(w, "Error updating teacher", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(existingTeacher)
+}
+
 // teacher handler
 func TeachersHandler(w http.ResponseWriter, r *http.Request) {
 	// fmt.Fprintf(w, "Main Page")
@@ -236,10 +325,13 @@ func TeachersHandler(w http.ResponseWriter, r *http.Request) {
 		getTeachersHandler(w, r)
 	case http.MethodPost:
 		// call post method handler function
-		addTeacherHandler(w, r)
+		addTeachersHandler(w, r)
 	case http.MethodPut:
 		// call put method handler function
-		updateTeacherHandler(w, r)
+		updateTeachersHandler(w, r)
+	case http.MethodPatch:
+		// call patch method handler function
+		patchUpdateTeachersHandler(w, r)
 	case http.MethodDelete:
 		w.Write([]byte("DELETE Method on Teachers Route Page"))
 	default:
