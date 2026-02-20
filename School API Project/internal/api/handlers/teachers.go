@@ -18,7 +18,7 @@ type Response struct {
 	Data   []model.Teacher `json:"data"`
 }
 
-// get methed --> /teachers/
+// get method --> /teachers/
 func getAllTeachers(w http.ResponseWriter, r *http.Request) {
 
 	db, err := sqlconnect.ConnectDB()
@@ -81,49 +81,48 @@ func getTeacherById(w http.ResponseWriter, r *http.Request, idStr string) {
 	}
 	defer db.Close()
 
-	if idStr == "" {
-		getAllTeachers(w, r)
-	} else {
-		id, err := strconv.Atoi(idStr)
-		if err != nil {
-			http.Error(w, "Invalid ID: ID must be a number", http.StatusBadRequest)
-			return
-		}
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid ID: ID must be intger", http.StatusBadRequest)
+		return
+	}
 
-		var teacher model.Teacher
-		query := "SELECT id, first_name, last_name, email, class, subject FROM teachers WHERE id = ?"
-		err = db.QueryRow(query, id).Scan(
-			&teacher.ID,
-			&teacher.FirstName,
-			&teacher.LastName,
-			&teacher.Email,
-			&teacher.Class,
-			&teacher.Subject,
-		)
+	var teacher model.Teacher
+	query := "SELECT id, first_name, last_name, email, class, subject FROM teachers WHERE id = ?"
+	err = db.QueryRow(query, id).Scan(
+		&teacher.ID,
+		&teacher.FirstName,
+		&teacher.LastName,
+		&teacher.Email,
+		&teacher.Class,
+		&teacher.Subject,
+	)
+
+	if err != nil {
 		if err == sql.ErrNoRows {
 			http.Error(w, "Teacher not found", http.StatusNotFound)
 			return
-		} else if err != nil {
-			http.Error(w, "Database query error", http.StatusInternalServerError)
-			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(teacher)
+		http.Error(w, "Database query error", http.StatusInternalServerError)
+		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(teacher)
 }
 
-func getTeachersHandler(w http.ResponseWriter, r *http.Request) {
+func GetTeachersHandler(w http.ResponseWriter, r *http.Request) {
 
-	path := strings.TrimPrefix(r.URL.Path, "/teachers/")
-	if path == "" {
+	idStr := r.PathValue("teacher_id")
+	if idStr == "" {
 		getAllTeachers(w, r)
 	} else {
-		getTeacherById(w, r, path)
+		getTeacherById(w, r, idStr)
 	}
 }
 
 // post method --> create a new teacher
-func addTeachersHandler(w http.ResponseWriter, r *http.Request) {
+func AddTeachersHandler(w http.ResponseWriter, r *http.Request) {
 
 	db, err := sqlconnect.ConnectDB()
 	if err != nil {
@@ -175,7 +174,7 @@ func addTeachersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // put method --> /teachers/{teacher_id}
-func updateTeachersHandler(w http.ResponseWriter, r *http.Request) {
+func UpdateTeachersHandler(w http.ResponseWriter, r *http.Request) {
 
 	db, err := sqlconnect.ConnectDB()
 	if err != nil {
@@ -184,7 +183,7 @@ func updateTeachersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	idStr := strings.TrimPrefix(r.URL.Path, "/teachers/")
+	idStr := r.PathValue("teacher_id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		http.Error(w, "Invalid Teacher ID", http.StatusBadRequest)
@@ -231,7 +230,7 @@ func updateTeachersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // patch method --> /teachers/{teacher_id}
-func patchUpdateTeachersHandler(w http.ResponseWriter, r *http.Request) {
+func PatchUpdateTeachersHandler(w http.ResponseWriter, r *http.Request) {
 
 	db, err := sqlconnect.ConnectDB()
 	if err != nil {
@@ -240,7 +239,7 @@ func patchUpdateTeachersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	idStr := strings.TrimPrefix(r.URL.Path, "/teachers/")
+	idStr := r.PathValue("teacher_id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		http.Error(w, "Invalid Teacher ID", http.StatusBadRequest)
@@ -274,40 +273,9 @@ func patchUpdateTeachersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// apply update
-	// for field, value := range updatedTeacher {
-
-	// 	strValue, ok := value.(string)
-	// 	if !ok {
-	// 		http.Error(w, "Invalid data type: expected text", http.StatusBadRequest)
-	// 		return
-	// 	}
-
-	// 	switch field {
-	// 	case "first_name":
-	// 		existingTeacher.FirstName = strValue
-	// 	case "last_name":
-	// 		existingTeacher.LastName = strValue
-	// 	case "email":
-	// 		existingTeacher.Email = strValue
-	// 	case "class":
-	// 		existingTeacher.Class = strValue
-	// 	case "subject":
-	// 		existingTeacher.Subject = strValue
-	// 	}
-	// }
-
 	// apply updates using reflect
-	teacherValue := reflect.ValueOf(&existingTeacher).Elem() // --> {100 Alice Brown alice@example.com 6A World History}
-	teacherType := teacherValue.Type()                       // --> model.Teacher
-	// teacherValue.Field(0)  --> 100
-	// teacherType.Field(0))  --> {ID  int json:"id,omitempty" 0 [0] false}
-	// teacherType.NumField()  --> 6
-	// field.Tag.Get("json") --> teacher's struct  example: "first_name,omitempty"
-	// teacherField := teacherValue.Field(i) --> alice@example.com (old)
-	// teacherField := teacherValue.Field(i).Type() --> string
-	// reflect.ValueOf(value) --> aliceSmith@example.com (new)
-
+	teacherValue := reflect.ValueOf(&existingTeacher).Elem()
+	teacherType := teacherValue.Type()
 	for column, value := range updatedTeacher {
 		for i := 0; i < teacherType.NumField(); i++ {
 			field := teacherType.Field(i)
@@ -339,7 +307,7 @@ func patchUpdateTeachersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // delete method --> /teachers/{teacher_id}
-func deleteTeachersHandler(w http.ResponseWriter, r *http.Request) {
+func DeleteTeachersHandler(w http.ResponseWriter, r *http.Request) {
 
 	db, err := sqlconnect.ConnectDB()
 	if err != nil {
@@ -381,31 +349,6 @@ func deleteTeachersHandler(w http.ResponseWriter, r *http.Request) {
 		ID:     id,
 	}
 	json.NewEncoder(w).Encode(response)
-}
-
-// teacher handler
-func TeachersHandler(w http.ResponseWriter, r *http.Request) {
-	// fmt.Fprintf(w, "Main Page")
-
-	switch r.Method {
-	case http.MethodGet:
-		// call get method handler function
-		getTeachersHandler(w, r)
-	case http.MethodPost:
-		// call post method handler function
-		addTeachersHandler(w, r)
-	case http.MethodPut:
-		// call put method handler function
-		updateTeachersHandler(w, r)
-	case http.MethodPatch:
-		// call patch method handler function
-		patchUpdateTeachersHandler(w, r)
-	case http.MethodDelete:
-		// call delete method handler function
-		deleteTeachersHandler(w, r)
-	default:
-		w.Write([]byte("Teachers Route Page"))
-	}
 }
 
 // Helper Functions

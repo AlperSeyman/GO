@@ -99,18 +99,59 @@ func main() {
 		log.Fatalln("Error starting the server", err)
 	}
 
-	// Path Params
-	// teachers/{id} -> teachers/9
+	*** Path Params ***
+	teachers/{id} -> teachers/9
 	fmt.Println(r.URL.Path)
 	path := strings.TrimPrefix(r.URL.Path, "/teachers/")
 	fmt.Println(path)
 	userID := strings.TrimPrefix(path, "/")
 	fmt.Println("The User ID:", userID)
 
-	// Query Params
-	// teachers/?key=value -> teachers/?name=Jhon&age=25
+	*** Query Params ***
+	teachers/?key=value -> teachers/?name=Jhon&age=25
 	fmt.Println(r.URL.Query())
 	queryParams := r.URL.Query()
 	name := queryParams.Get("name")
 	fmt.Println(name)
 }
+
+
+
+	*** apply update ***
+
+	for field, value := range updatedTeacher {
+
+	 	strValue, ok := value.(string)
+	 	if !ok {
+	 		http.Error(w, "Invalid data type: expected text", http.StatusBadRequest)
+	 		return
+	 	}
+
+	 	switch field {
+	 	case "first_name":
+	 		existingTeacher.FirstName = strValue
+	 	case "last_name":
+	 		existingTeacher.LastName = strValue
+	 	case "email":
+	 		existingTeacher.Email = strValue
+	 	case "class":
+	 		existingTeacher.Class = strValue
+	 	case "subject":
+	 		existingTeacher.Subject = strValue
+	 	}
+	}
+
+
+
+
+	*** apply updates using reflect ***
+
+	teacherValue := reflect.ValueOf(&existingTeacher).Elem()  --> {100 Alice Brown alice@example.com 6A World History}
+	teacherType := teacherValue.Type()                        --> model.Teacher
+	teacherValue.Field(0)  --> 100
+	teacherType.Field(0))  --> {ID  int json:"id,omitempty" 0 [0] false}
+	teacherType.NumField()  --> 6
+	field.Tag.Get("json") --> teacher's struct  example: "first_name,omitempty"
+	teacherField := teacherValue.Field(i) --> alice@example.com (old)
+	teacherField := teacherValue.Field(i).Type() --> string
+	reflect.ValueOf(value) --> aliceSmith@example.com (new)
