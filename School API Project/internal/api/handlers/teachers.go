@@ -338,6 +338,51 @@ func patchUpdateTeachersHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(existingTeacher)
 }
 
+// delete method --> /teachers/{teacher_id}
+func deleteTeachersHandler(w http.ResponseWriter, r *http.Request) {
+
+	db, err := sqlconnect.ConnectDB()
+	if err != nil {
+		http.Error(w, "Error connecting to database", http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	idStr := strings.TrimPrefix(r.URL.Path, "/teachers/")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid Teacher ID", http.StatusBadRequest)
+		return
+	}
+
+	query := "SELECT FROM teachers WHERE id=?"
+	result, err := db.Exec(query, id)
+	if err != nil {
+		http.Error(w, "Error deleting teacher", http.StatusInternalServerError)
+		return
+	}
+
+	rowsAffected, err := result.RowsAffected() // --> 0 or 1
+	if err != nil {
+		http.Error(w, "Error retrieving delete result", http.StatusInternalServerError)
+		return
+	}
+	if rowsAffected == 0 {
+		http.Error(w, "Teacher not found", http.StatusNotFound)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	response := struct {
+		Status string `json:"status"`
+		ID     int    `json:"id"`
+	}{
+		Status: "Teacher successfully deleted",
+		ID:     id,
+	}
+	json.NewEncoder(w).Encode(response)
+}
+
 // teacher handler
 func TeachersHandler(w http.ResponseWriter, r *http.Request) {
 	// fmt.Fprintf(w, "Main Page")
@@ -356,7 +401,8 @@ func TeachersHandler(w http.ResponseWriter, r *http.Request) {
 		// call patch method handler function
 		patchUpdateTeachersHandler(w, r)
 	case http.MethodDelete:
-		w.Write([]byte("DELETE Method on Teachers Route Page"))
+		// call delete method handler function
+		deleteTeachersHandler(w, r)
 	default:
 		w.Write([]byte("Teachers Route Page"))
 	}
