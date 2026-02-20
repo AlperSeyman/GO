@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"reflect"
 	"restapi/internal/model"
 	"restapi/internal/repository/sqlconnect"
 	"strconv"
@@ -274,31 +275,54 @@ func patchUpdateTeachersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// apply update
-	for field, value := range updatedTeacher {
+	// for field, value := range updatedTeacher {
 
-		strValue, ok := value.(string)
-		if !ok {
-			http.Error(w, "Invalid data type: expected text", http.StatusBadRequest)
-			return
-		}
+	// 	strValue, ok := value.(string)
+	// 	if !ok {
+	// 		http.Error(w, "Invalid data type: expected text", http.StatusBadRequest)
+	// 		return
+	// 	}
 
-		switch field {
-		case "first_name":
-			existingTeacher.FirstName = strValue
-		case "last_name":
-			existingTeacher.LastName = strValue
-		case "email":
-			existingTeacher.Email = strValue
-		case "class":
-			existingTeacher.Class = strValue
-		case "subject":
-			existingTeacher.Subject = strValue
+	// 	switch field {
+	// 	case "first_name":
+	// 		existingTeacher.FirstName = strValue
+	// 	case "last_name":
+	// 		existingTeacher.LastName = strValue
+	// 	case "email":
+	// 		existingTeacher.Email = strValue
+	// 	case "class":
+	// 		existingTeacher.Class = strValue
+	// 	case "subject":
+	// 		existingTeacher.Subject = strValue
+	// 	}
+	// }
+
+	// apply updates using reflect
+	teacherValue := reflect.ValueOf(&existingTeacher).Elem() // --> {100 Alice Brown alice@example.com 6A World History}
+	teacherType := teacherValue.Type()                       // --> model.Teacher
+	// teacherValue.Field(0)  --> 100
+	// teacherType.Field(0))  --> {ID  int json:"id,omitempty" 0 [0] false}
+	// teacherType.NumField()  --> 6
+	// field.Tag.Get("json") --> teacher's struct  example: "first_name,omitempty"
+	// teacherField := teacherValue.Field(i) --> alice@example.com (old)
+	// teacherField := teacherValue.Field(i).Type() --> string
+	// reflect.ValueOf(value) --> aliceSmith@example.com (new)
+
+	for column, value := range updatedTeacher {
+		for i := 0; i < teacherType.NumField(); i++ {
+			field := teacherType.Field(i)
+			if field.Tag.Get("json") == column+",omitempty" {
+				if teacherValue.Field(i).CanSet() { // checking that user is allowed to update
+					teacherField := teacherValue.Field(i)
+					teacherField.Set(reflect.ValueOf(value).Convert(teacherValue.Field(i).Type()))
+
+				}
+			}
 		}
 	}
 
 	query = "UPDATE teachers SET first_name=?, last_name=?, email=?, class=?, subject=? WHERE id=?"
-	_, err = db.Exec(
-		query,
+	_, err = db.Exec(query,
 		existingTeacher.FirstName,
 		existingTeacher.LastName,
 		existingTeacher.Email,
@@ -310,7 +334,6 @@ func patchUpdateTeachersHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error updating teacher", http.StatusInternalServerError)
 		return
 	}
-
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(existingTeacher)
 }
