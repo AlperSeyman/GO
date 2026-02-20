@@ -316,14 +316,14 @@ func DeleteTeachersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	idStr := strings.TrimPrefix(r.URL.Path, "/teachers/")
+	idStr := r.PathValue("teacher_id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		http.Error(w, "Invalid Teacher ID", http.StatusBadRequest)
 		return
 	}
 
-	query := "SELECT FROM teachers WHERE id=?"
+	query := "DELETE FROM teachers WHERE id=?"
 	result, err := db.Exec(query, id)
 	if err != nil {
 		http.Error(w, "Error deleting teacher", http.StatusInternalServerError)
@@ -337,6 +337,7 @@ func DeleteTeachersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if rowsAffected == 0 {
 		http.Error(w, "Teacher not found", http.StatusNotFound)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
