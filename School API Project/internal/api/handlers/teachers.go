@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"reflect"
 	"restapi/internal/model"
@@ -18,7 +19,7 @@ type Response struct {
 	Data   []model.Teacher `json:"data"`
 }
 
-// get method --> /teachers/
+// get method --> /teachers
 func getAllTeachers(w http.ResponseWriter, r *http.Request) {
 
 	db, err := sqlconnect.ConnectDB()
@@ -229,8 +230,111 @@ func UpdateTeachersHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(updatedTeacher)
 }
 
+// patch method --> /teachers
+func PatchTeachersHandler(w http.ResponseWriter, r *http.Request) {
+
+	db, err := sqlconnect.ConnectDB()
+	if err != nil {
+		http.Error(w, "Errro connecting to dabase", http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	var updatedTeachers []map[string]any
+	err = json.NewDecoder(r.Body).Decode(&updatedTeachers)
+	if err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+	tx, err := db.Begin()
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Error starting transaction", http.StatusInternalServerError)
+		return
+	}
+
+	for _, updateTeacher := range updatedTeachers {
+		idFloat, ok := updateTeacher["id"].(float64)
+		if !ok {
+			tx.Rollback()
+			http.Error(w, "Invalid teacher ID in update", http.StatusBadRequest)
+			return
+		}
+		id := int(idFloat)
+
+		var existingTeacher model.Teacher
+		query := "SELECT id, first_name, last_name, email, class, subject FROM teachers WHERE id = ?"
+		err = db.QueryRow(query, id).Scan(
+			&existingTeacher.ID,
+			&existingTeacher.FirstName,
+			&existingTeacher.LastName,
+			&existingTeacher.Email,
+			&existingTeacher.Class,
+			&existingTeacher.Subject,
+		)
+		if err != nil {
+			tx.Rollback()
+			if err == sql.ErrNoRows {
+				http.Error(w, "Teacher not found", http.StatusNotFound)
+				return
+			}
+			http.Error(w, "Unable to retrieve data", http.StatusInternalServerError)
+			return
+		}
+
+		// appyling update using reflect
+
+		teacherValue := reflect.ValueOf(&existingTeacher).Elem()
+		teacherType := teacherValue.Type()
+
+		for column, value := range updateTeacher {
+			if column == "id" {
+				continue // skip updating the id field.
+			}
+			for i := 0; i < teacherValue.NumField(); i++ {
+				field := teacherType.Field(i)
+				if field.Tag.Get("json") == column+",omitempty" {
+					fieldValue := teacherValue.Field(i) //  old value
+					if fieldValue.CanSet() {
+						val := reflect.ValueOf(value) // new value
+						if val.Type().ConvertibleTo(fieldValue.Type()) {
+							fieldValue.Set(val.Convert(fieldValue.Type()))
+						} else {
+							tx.Rollback()
+							log.Printf("Cannot convert %v to %v", val.Type(), fieldValue.Type())
+							return
+						}
+					}
+					break
+				}
+			}
+		}
+
+		query = "UPDATE teachers SET first_name=?, last_name=?, email=?, class=?, subject=? WHERE id = ?"
+		_, err = tx.Exec(query,
+			existingTeacher.FirstName,
+			existingTeacher.LastName,
+			existingTeacher.Email,
+			existingTeacher.Class,
+			existingTeacher.Subject,
+			id,
+		)
+		if err != nil {
+			tx.Rollback()
+			http.Error(w, "Error updating teacher", http.StatusInternalServerError)
+			return
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		http.Error(w, "Error committing transaction", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // patch method --> /teachers/{teacher_id}
-func PatchUpdateTeachersHandler(w http.ResponseWriter, r *http.Request) {
+func PatchOneTeachersHandler(w http.ResponseWriter, r *http.Request) {
 
 	db, err := sqlconnect.ConnectDB()
 	if err != nil {
@@ -306,8 +410,13 @@ func PatchUpdateTeachersHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(existingTeacher)
 }
 
-// delete method --> /teachers/{teacher_id}
+// delete methdo --> /teachers/
 func DeleteTeachersHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("aaaa")
+}
+
+// delete method --> /teachers/{teacher_id}
+func DeleteOneTeachersHandler(w http.ResponseWriter, r *http.Request) {
 
 	db, err := sqlconnect.ConnectDB()
 	if err != nil {
@@ -351,6 +460,8 @@ func DeleteTeachersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	json.NewEncoder(w).Encode(response)
 }
+
+// *******************************************
 
 // Helper Functions
 func queryFunc(r *http.Request, query string, args []any) (string, []any) { // add filters
