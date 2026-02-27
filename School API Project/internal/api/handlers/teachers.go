@@ -20,6 +20,7 @@ func getAllTeachers(w http.ResponseWriter, r *http.Request) {
 	var teachers []model.Teacher
 	teachers, err := sqlconnect.GetTeachersDbHandler(teachers, r)
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	response := Response{
@@ -42,6 +43,7 @@ func getTeacherById(w http.ResponseWriter, r *http.Request, idStr string) {
 	}
 	teacher, err := sqlconnect.GetTeacherByIdHandler(id)
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -71,6 +73,7 @@ func AddTeachersHandler(w http.ResponseWriter, r *http.Request) {
 
 	addedTeachers, err := sqlconnect.AddTeacherDbHandler(newTeachers)
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -105,6 +108,7 @@ func UpdateTeachersHandler(w http.ResponseWriter, r *http.Request) {
 
 	updatedTeacherFromDb, err := sqlconnect.UpdatedTeachersDbHandler(id, updatedTeacher)
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -123,6 +127,7 @@ func PatchTeachersHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = sqlconnect.PatchTeachersDbHandler(updatedTeachers)
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -147,6 +152,7 @@ func PatchOneTeachersHandler(w http.ResponseWriter, r *http.Request) {
 
 	existingTeacher, err := sqlconnect.PatchOneTeachersDbHandler(id, updatedTeacher)
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -167,6 +173,7 @@ func DeleteTeachersHandler(w http.ResponseWriter, r *http.Request) {
 
 	deletedIDs, err := sqlconnect.DeleteTeachersDbHandler(ids)
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -193,6 +200,7 @@ func DeleteOneTeachersHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = sqlconnect.DeleteOneTeachersDbHandler(id)
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
