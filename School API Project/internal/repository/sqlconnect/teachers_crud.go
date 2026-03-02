@@ -8,119 +8,7 @@ import (
 	"reflect"
 	"restapi/internal/model"
 	"restapi/pkg/utils"
-	"strings"
 )
-
-func getAllowedColumns() map[string]bool {
-
-	allowed := make(map[string]bool)
-	teacherType := reflect.TypeOf(model.Teacher{})
-
-	for i := 0; i < teacherType.NumField(); i++ {
-		dbTag := teacherType.Field(i).Tag.Get("db")
-		if dbTag != "" && dbTag != "-" {
-			columnName := strings.Split(dbTag, ",")[0]
-			allowed[columnName] = true
-		}
-	}
-	return allowed
-}
-
-func queryFunc(r *http.Request, query string, args []any) (string, []any) {
-
-	allowedColumns := getAllowedColumns()
-
-	for param, values := range r.URL.Query() {
-		if allowedColumns[param] {
-			value := values[0]
-			if value != "" {
-				query += " AND" + param + " = ?"
-				args = append(args, value)
-			}
-		}
-	}
-	return query, args
-}
-
-func isValidSortOrder(order string) bool {
-	cleanOrder := strings.ToLower(strings.TrimSpace(order))
-	return cleanOrder == "asc" || order == "desc"
-}
-
-func isValidSortField(field string) bool {
-
-	allowedColumnd := getAllowedColumns()
-	cleanField := strings.ToLower(strings.TrimSpace(field))
-	return allowedColumnd[cleanField]
-
-}
-
-func sortFunc(r *http.Request, query string) string {
-
-	sortParams := r.URL.Query()["sortby"]
-	if len(sortParams) == 0 {
-		return query
-	}
-
-	var validSorts []string
-	for _, param := range sortParams {
-		parts := strings.Split(param, ":")
-		if len(parts) != 2 {
-			continue
-		}
-		field := parts[0]
-		order := parts[1]
-
-		if isValidSortField(field) && isValidSortOrder(order) {
-			validSorts = append(validSorts, field+" "+strings.ToLower(order))
-		}
-	}
-	if len(validSorts) > 0 {
-		query += " ORDER BY" + strings.Join(validSorts, ", ")
-	}
-	return query
-
-}
-
-func generateInsertQuery(model any) string {
-
-	modelType := reflect.TypeOf(model)
-
-	if modelType.Kind() == reflect.Slice {
-		modelType = modelType.Elem()
-	}
-	var columns, placeholders string
-	for i := 0; i < modelType.NumField(); i++ {
-		dbTag := modelType.Field(i).Tag.Get("db")
-		fmt.Println("DB Tag", dbTag)
-		dbTag = strings.TrimSuffix(dbTag, ",omitempty")
-		if dbTag != "" && dbTag != "id" { // skip the ID field if it's auto increment
-			if columns != "" {
-				columns += ", "
-				placeholders += ", "
-			}
-			columns += dbTag
-			placeholders += "?"
-		}
-	}
-	return fmt.Sprintf("INSERT INTO teachers (%s) VALUES (%s)", columns, placeholders)
-
-}
-
-func getStructValues(model any) []any {
-
-	modelValue := reflect.ValueOf(model)
-	modelType := modelValue.Type()
-	values := []interface{}{}
-	for i := 0; i < modelType.NumField(); i++ {
-		dbTag := modelType.Field(i).Tag.Get("db")
-		if dbTag != "" && dbTag != "id,omitempty" {
-			values = append(values, modelValue.Field(i).Interface())
-		}
-	}
-	log.Println(values...)
-	return values
-}
 
 func GetTeachersDbHandler(teachers []model.Teacher, r *http.Request) ([]model.Teacher, error) {
 
@@ -131,14 +19,14 @@ func GetTeachersDbHandler(teachers []model.Teacher, r *http.Request) ([]model.Te
 	}
 	defer db.Close()
 
-	query := "SELECT id, first_name, last_name, email, class, subject FROM teachers WHERE 1=1"
+	query := GenerateSelectQuery(model.Teacher{}) + " WHERE 1 = 1"
 	var args []any
 
 	// filtering
-	query, args = queryFunc(r, query, args)
+	query, args = QueryFunc(r, query, args)
 
 	// sorting
-	query = sortFunc(r, query)
+	query = SortFunc(r, query)
 
 	rows, err := db.Query(query, args...)
 	if err != nil {
@@ -148,7 +36,8 @@ func GetTeachersDbHandler(teachers []model.Teacher, r *http.Request) ([]model.Te
 	// teacherList := make([]model.Teacher, 0)
 	for rows.Next() {
 		var teacher model.Teacher
-		err = rows.Scan(&teacher.ID, &teacher.FirstName, &teacher.LastName, &teacher.Email, &teacher.Class, &teacher.Subject)
+		structPointers := GetStructPointers(&teacher)
+		err = rows.Scan(structPointers...)
 		if err != nil {
 			// http.Error(w, "Error scanning database results", http.StatusInternalServerError)
 			return nil, utils.ErrorHandler(err, "Error scanning database results")
@@ -168,15 +57,11 @@ func GetTeacherByIdHandler(id int) (model.Teacher, error) {
 	defer db.Close()
 
 	var teacher model.Teacher
-	query := "SELECT id, first_name, last_name, email, class, subject FROM teachers WHERE id = ?"
-	err = db.QueryRow(query, id).Scan(
-		&teacher.ID,
-		&teacher.FirstName,
-		&teacher.LastName,
-		&teacher.Email,
-		&teacher.Class,
-		&teacher.Subject,
-	)
+
+	query := GenerateSelectQuery(teacher) + " WHERE  id = ?"
+
+	structPointers := GetStructPointers(&teacher)
+	err = db.QueryRow(query, id).Scan(structPointers...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			// http.Error(w, "Teacher not found", http.StatusNotFound)
@@ -196,7 +81,7 @@ func AddTeacherDbHandler(newTeachers []model.Teacher) ([]model.Teacher, error) {
 	}
 	defer db.Close()
 
-	query := generateInsertQuery(model.Teacher{})
+	query := GenerateInsertQuery(model.Teacher{})
 
 	stmt, err := db.Prepare(query)
 	if err != nil {
@@ -207,7 +92,7 @@ func AddTeacherDbHandler(newTeachers []model.Teacher) ([]model.Teacher, error) {
 
 	addedTeachers := make([]model.Teacher, len(newTeachers))
 	for i, newTeacher := range newTeachers {
-		structValues := getStructValues(newTeacher)
+		structValues := GetStructValues(newTeacher)
 		result, err := stmt.Exec(structValues...)
 		if err != nil {
 			// http.Error(w, "Error inserting data into database", http.StatusInternalServerError)
@@ -234,16 +119,12 @@ func UpdatedTeachersDbHandler(id int, updatedTeacher model.Teacher) (model.Teach
 	defer db.Close()
 
 	var existingTeacher model.Teacher
-	query := "SELECT id, first_name, last_name, email, class, subject FROM teachers WHERE id = ?"
-	err = db.QueryRow(query, id).Scan(
-		&existingTeacher.ID,
-		&existingTeacher.FirstName,
-		&existingTeacher.LastName,
-		&existingTeacher.Email,
-		&existingTeacher.Class,
-		&existingTeacher.Subject,
-	)
 
+	query := GenerateSelectQuery(model.Teacher{}) + " WHERE id = ?"
+
+	structPointers := GetStructPointers(&existingTeacher)
+
+	err = db.QueryRow(query, id).Scan(structPointers...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			// http.Error(w, "Teacher not found", http.StatusNotFound)
@@ -255,9 +136,11 @@ func UpdatedTeachersDbHandler(id int, updatedTeacher model.Teacher) (model.Teach
 
 	updatedTeacher.ID = existingTeacher.ID
 
-	query = "UPDATE teachers SET first_name=?, last_name=?, email=?, class=?, subject=? WHERE id=?"
+	query = GenerateUpdateQuery(model.Teacher{}) + " WHERE id = ?"
 
-	_, err = db.Exec(query, updatedTeacher.FirstName, updatedTeacher.LastName, updatedTeacher.Email, updatedTeacher.Class, updatedTeacher.Subject, updatedTeacher.ID)
+	structValues := GetStructValues(updatedTeacher)
+	structValues = append(structValues, id)
+	_, err = db.Exec(query, structValues...)
 	if err != nil {
 		// http.Error(w, "Error updating teacher", http.StatusInternalServerError)
 		return model.Teacher{}, utils.ErrorHandler(err, "Error updating teacher")
@@ -291,15 +174,11 @@ func PatchTeachersDbHandler(updatedTeachers []map[string]any) error {
 		id := int(idFloat)
 
 		var existingTeacher model.Teacher
-		query := "SELECT id, first_name, last_name, email, class, subject FROM teachers WHERE id = ?"
-		err = db.QueryRow(query, id).Scan(
-			&existingTeacher.ID,
-			&existingTeacher.FirstName,
-			&existingTeacher.LastName,
-			&existingTeacher.Email,
-			&existingTeacher.Class,
-			&existingTeacher.Subject,
-		)
+		query := GenerateSelectQuery(model.Teacher{}) + " WHERE id = ?"
+
+		structPointers := GetStructPointers(&existingTeacher)
+
+		err = db.QueryRow(query, id).Scan(structPointers...)
 		if err != nil {
 			tx.Rollback()
 			if err == sql.ErrNoRows {
@@ -338,15 +217,11 @@ func PatchTeachersDbHandler(updatedTeachers []map[string]any) error {
 			}
 		}
 
-		query = "UPDATE teachers SET first_name=?, last_name=?, email=?, class=?, subject=? WHERE id = ?"
-		_, err = tx.Exec(query,
-			existingTeacher.FirstName,
-			existingTeacher.LastName,
-			existingTeacher.Email,
-			existingTeacher.Class,
-			existingTeacher.Subject,
-			id,
-		)
+		query = GenerateUpdateQuery(model.Teacher{}) + " WHERE id = ?"
+
+		structValues := GetStructValues(existingTeacher)
+		structValues = append(structValues, id)
+		_, err = tx.Exec(query, structValues...)
 		if err != nil {
 			tx.Rollback()
 			// http.Error(w, "Error updating teacher", http.StatusInternalServerError)
@@ -372,15 +247,11 @@ func PatchOneTeachersDbHandler(id int, updatedTeacher map[string]any) (model.Tea
 	defer db.Close()
 
 	var existingTeacher model.Teacher
-	query := "SELECT id, first_name, last_name, email, class, subject FROM teachers WHERE id = ?"
-	err = db.QueryRow(query, id).Scan(
-		&existingTeacher.ID,
-		&existingTeacher.FirstName,
-		&existingTeacher.LastName,
-		&existingTeacher.Email,
-		&existingTeacher.Class,
-		&existingTeacher.Subject,
-	)
+	query := GenerateSelectQuery(model.Teacher{}) + " WHERE id = ?"
+
+	structPointers := GetStructPointers(&existingTeacher)
+
+	err = db.QueryRow(query, id).Scan(structPointers...)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -407,15 +278,10 @@ func PatchOneTeachersDbHandler(id int, updatedTeacher map[string]any) (model.Tea
 		}
 	}
 
-	query = "UPDATE teachers SET first_name=?, last_name=?, email=?, class=?, subject=? WHERE id=?"
-	_, err = db.Exec(query,
-		existingTeacher.FirstName,
-		existingTeacher.LastName,
-		existingTeacher.Email,
-		existingTeacher.Class,
-		existingTeacher.Subject,
-		existingTeacher.ID,
-	)
+	query = GenerateUpdateQuery(model.Teacher{}) + " WHERE id = ?"
+	structValues := GetStructValues(existingTeacher)
+	structValues = append(structValues, id)
+	_, err = db.Exec(query, structValues...)
 	if err != nil {
 		// http.Error(w, "Error updating teacher", http.StatusInternalServerError)
 		return model.Teacher{}, utils.ErrorHandler(err, "Error updating teacher")
