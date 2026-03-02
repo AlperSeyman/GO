@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
+	"reflect"
 	"restapi/internal/model"
 	"restapi/internal/repository/sqlconnect"
 	"strconv"
@@ -64,11 +66,46 @@ func GetTeachersHandler(w http.ResponseWriter, r *http.Request) {
 // post method --> create a new teacher
 func AddTeachersHandler(w http.ResponseWriter, r *http.Request) {
 
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Error sending request", http.StatusInternalServerError)
+		return
+	}
+
+	var rawTeachers []map[string]any
+	err = json.Unmarshal(bodyBytes, &rawTeachers)
+	if err != nil {
+		http.Error(w, "Invalid Request Body", http.StatusBadRequest)
+		return
+	}
+
+	allowedFields := sqlconnect.GetAllowedFields(model.Teacher{})
+	for _, teacher := range rawTeachers {
+		for key := range teacher {
+			_, ok := allowedFields[key]
+			if !ok {
+				http.Error(w, "Unacceptable field found in request. Only use allowed field", http.StatusBadRequest)
+				return
+			}
+		}
+	}
+
 	var newTeachers []model.Teacher
-	err := json.NewDecoder(r.Body).Decode(&newTeachers)
+	err = json.Unmarshal(bodyBytes, &newTeachers)
 	if err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
+	}
+
+	for _, teacher := range newTeachers {
+		val := reflect.ValueOf(teacher)
+		for i := 0; i < val.NumField(); i++ {
+			field := val.Field(i)
+			if field.Kind() == reflect.String && field.String() == "" {
+				http.Error(w, "All fields are required", http.StatusBadRequest)
+				return
+			}
+		}
 	}
 
 	addedTeachers, err := sqlconnect.AddTeacherDbHandler(newTeachers)

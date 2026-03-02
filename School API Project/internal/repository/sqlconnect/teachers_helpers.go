@@ -23,6 +23,26 @@ func getAllowedColumns() map[string]bool {
 	return allowed
 }
 
+func GetAllowedFields(model any) map[string]struct{} {
+
+	allowedFields := make(map[string]struct{})
+	val := reflect.TypeOf(model)
+
+	for i := 0; i < val.NumField(); i++ {
+		fieldName := val.Field(i).Name
+		if fieldName == "ID" {
+			continue
+		}
+		tag := val.Field(i).Tag.Get("json")
+		cleanTag := strings.Split(tag, ",")[0]
+		if cleanTag != "" && cleanTag != "-" {
+			allowedFields[cleanTag] = struct{}{}
+		}
+	}
+	return allowedFields
+
+}
+
 func QueryFunc(r *http.Request, query string, args []any) (string, []any) {
 
 	allowedColumns := getAllowedColumns()
