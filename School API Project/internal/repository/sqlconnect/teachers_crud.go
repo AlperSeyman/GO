@@ -7,26 +7,29 @@ import (
 	"net/http"
 	"reflect"
 	"restapi/internal/model"
+
 	"restapi/pkg/utils"
 )
 
-func GetTeachersDbHandler(teachers []model.Teacher, r *http.Request) ([]model.Teacher, error) {
+func GetTeachersDbHandler(r *http.Request) ([]model.Teacher, error) {
 
 	db, err := ConnectDB()
 	if err != nil {
 		//http.Error(w, "Error connecting ta database", http.StatusInternalServerError)
-		return nil, utils.ErrorHandler(err, "Error connecting ta database")
+		return nil, utils.ErrorHandler(err, "Error connecting to database..")
 	}
 	defer db.Close()
 
-	query := GenerateSelectQuery(model.Teacher{}) + " WHERE 1 = 1"
+	var teachers []model.Teacher
+
+	query := GenerateSelectQuery(model.Teacher{}, "teachers") + " WHERE 1 = 1"
 	var args []any
 
 	// filtering
-	query, args = QueryFunc(r, query, args)
+	query, args = QueryFunc(r, model.Teacher{}, query, args)
 
 	// sorting
-	query = SortFunc(r, query)
+	query = SortFunc(r, model.Teacher{}, query)
 
 	rows, err := db.Query(query, args...)
 	if err != nil {
@@ -44,6 +47,12 @@ func GetTeachersDbHandler(teachers []model.Teacher, r *http.Request) ([]model.Te
 		}
 		teachers = append(teachers, teacher)
 	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, utils.ErrorHandler(err, "The database connection was lost while reading rows")
+	}
+
 	return teachers, nil
 }
 
@@ -58,7 +67,7 @@ func GetTeacherByIdHandler(id int) (model.Teacher, error) {
 
 	var teacher model.Teacher
 
-	query := GenerateSelectQuery(teacher) + " WHERE  id = ?"
+	query := GenerateSelectQuery(teacher, "teachers") + " WHERE  id = ?"
 
 	structPointers := GetStructPointers(&teacher)
 	err = db.QueryRow(query, id).Scan(structPointers...)
@@ -81,7 +90,7 @@ func AddTeacherDbHandler(newTeachers []model.Teacher) ([]model.Teacher, error) {
 	}
 	defer db.Close()
 
-	query := GenerateInsertQuery(model.Teacher{})
+	query := GenerateInsertQuery(model.Teacher{}, "teachers")
 
 	stmt, err := db.Prepare(query)
 	if err != nil {
@@ -120,7 +129,7 @@ func UpdatedTeachersDbHandler(id int, updatedTeacher model.Teacher) (model.Teach
 
 	var existingTeacher model.Teacher
 
-	query := GenerateSelectQuery(model.Teacher{}) + " WHERE id = ?"
+	query := GenerateSelectQuery(model.Teacher{}, "teachers") + " WHERE id = ?"
 
 	structPointers := GetStructPointers(&existingTeacher)
 
@@ -136,7 +145,7 @@ func UpdatedTeachersDbHandler(id int, updatedTeacher model.Teacher) (model.Teach
 
 	updatedTeacher.ID = existingTeacher.ID
 
-	query = GenerateUpdateQuery(model.Teacher{}) + " WHERE id = ?"
+	query = GenerateUpdateQuery(model.Teacher{}, "teachers")
 
 	structValues := GetStructValues(updatedTeacher)
 	structValues = append(structValues, id)
@@ -154,7 +163,7 @@ func PatchTeachersDbHandler(updatedTeachers []map[string]any) error {
 	db, err := ConnectDB()
 	if err != nil {
 		// http.Error(w, "Errro connecting to dabase", http.StatusInternalServerError)
-		return utils.ErrorHandler(err, "Errro connecting to dabase")
+		return utils.ErrorHandler(err, "Errro connecting to database")
 	}
 	defer db.Close()
 
@@ -174,7 +183,7 @@ func PatchTeachersDbHandler(updatedTeachers []map[string]any) error {
 		id := int(idFloat)
 
 		var existingTeacher model.Teacher
-		query := GenerateSelectQuery(model.Teacher{}) + " WHERE id = ?"
+		query := GenerateSelectQuery(model.Teacher{}, "teachers") + " WHERE id = ?"
 
 		structPointers := GetStructPointers(&existingTeacher)
 
@@ -217,7 +226,7 @@ func PatchTeachersDbHandler(updatedTeachers []map[string]any) error {
 			}
 		}
 
-		query = GenerateUpdateQuery(model.Teacher{}) + " WHERE id = ?"
+		query = GenerateUpdateQuery(model.Teacher{}, "teachers")
 
 		structValues := GetStructValues(existingTeacher)
 		structValues = append(structValues, id)
@@ -247,7 +256,7 @@ func PatchOneTeachersDbHandler(id int, updatedTeacher map[string]any) (model.Tea
 	defer db.Close()
 
 	var existingTeacher model.Teacher
-	query := GenerateSelectQuery(model.Teacher{}) + " WHERE id = ?"
+	query := GenerateSelectQuery(model.Teacher{}, "teachers") + " WHERE id = ?"
 
 	structPointers := GetStructPointers(&existingTeacher)
 
@@ -278,7 +287,7 @@ func PatchOneTeachersDbHandler(id int, updatedTeacher map[string]any) (model.Tea
 		}
 	}
 
-	query = GenerateUpdateQuery(model.Teacher{}) + " WHERE id = ?"
+	query = GenerateUpdateQuery(model.Teacher{}, "teachers") + " WHERE id = ?"
 	structValues := GetStructValues(existingTeacher)
 	structValues = append(structValues, id)
 	_, err = db.Exec(query, structValues...)

@@ -20,7 +20,8 @@ type Response struct {
 func getAllTeachers(w http.ResponseWriter, r *http.Request) {
 
 	var teachers []model.Teacher
-	teachers, err := sqlconnect.GetTeachersDbHandler(teachers, r)
+	var err error
+	teachers, err = sqlconnect.GetTeachersDbHandler(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
