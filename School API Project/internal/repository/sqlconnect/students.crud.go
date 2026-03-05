@@ -2,10 +2,13 @@ package sqlconnect
 
 import (
 	"database/sql"
+	"fmt"
+	"log"
 	"net/http"
 	"reflect"
 	"restapi/internal/model"
 	"restapi/pkg/utils"
+	"strings"
 )
 
 func GetStudentsDbHandler(r *http.Request) ([]model.Student, error) {
@@ -161,7 +164,7 @@ func PatchStudentsDbHandler(updatedStudents []map[string]any) error {
 
 		structPointer := GetStructPointers(&existingStudent)
 
-		err = db.QueryRow(query, id).Scan(structPointer...)
+		err = tx.QueryRow(query, id).Scan(structPointer...)
 		if err != nil {
 			tx.Rollback()
 			if err == sql.ErrNoRows {
@@ -179,20 +182,23 @@ func PatchStudentsDbHandler(updatedStudents []map[string]any) error {
 			}
 			for i := 0; i < studentType.NumField(); i++ {
 				field := studentType.Field(i)
-				fieldTag := field.Tag.Get("json")
-				if fieldTag == column+",omitempty" {
-					fielValue := studentValue.Field(i) // old value
-					if fielValue.CanSet() {
+				cleanTag := strings.Split(field.Tag.Get("json"), ",")[0]
+				if cleanTag == column {
+					fieldToUpdate := studentValue.Field(i) // old value
+					if fieldToUpdate.CanSet() {
 						val := reflect.ValueOf(value) // new value
-						if val.Type().ConvertibleTo(fielValue.Type()) {
-							fielValue.Set(val.Convert(fielValue.Type()))
+						if val.Type().ConvertibleTo(fieldToUpdate.Type()) {
+							fieldToUpdate.Set(val.Convert(fieldToUpdate.Type()))
 						} else {
 							tx.Rollback()
+							log.Printf("Cannot convert %v to %v", val.Type(), fieldToUpdate.Type())
 							return utils.ErrorHandler(err, "Error updating data")
 						}
+
 					}
 					break
 				}
+
 			}
 		}
 
@@ -213,4 +219,126 @@ func PatchStudentsDbHandler(updatedStudents []map[string]any) error {
 
 	return nil
 
+}
+
+func PatchOneStudentsDbHandler(id int, updatedStudent map[string]any) (model.Student, error) {
+
+	db, err := ConnectDB()
+	if err != nil {
+		return model.Student{}, utils.ErrorHandler(err, "Error connecting to database")
+	}
+	defer db.Close()
+
+	var existingStudent model.Student
+	query := GenerateSelectQuery(model.Student{}, "students") + " WHERE id = ?"
+
+	structPointers := GetStructPointers(&existingStudent)
+
+	err = db.QueryRow(query, id).Scan(structPointers...)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return model.Student{}, utils.ErrorHandler(err, "Student not found")
+		}
+		return model.Student{}, utils.ErrorHandler(err, "Unable to retrieve data")
+	}
+
+	studentValue := reflect.ValueOf(&existingStudent).Elem()
+	studentType := studentValue.Type()
+	for column, value := range updatedStudent {
+		for i := 0; i < studentType.NumField(); i++ {
+			field := studentType.Field(i)
+			cleanTag := strings.Split(field.Tag.Get("json"), ",")[0]
+			if cleanTag == column {
+				if studentValue.Field(i).CanSet() {
+					studentField := studentValue.Field(i)
+					studentField.Set(reflect.ValueOf(value).Convert(studentValue.Field(i).Type()))
+				}
+			}
+		}
+	}
+
+	query = GenerateUpdateQuery(model.Student{}, "students")
+	structValues := GetStructValues(existingStudent)
+	structValues = append(structValues, id)
+	_, err = db.Exec(query, structValues...)
+	if err != nil {
+		return model.Student{}, utils.ErrorHandler(err, "Error updating student")
+	}
+	return existingStudent, nil
+}
+
+func DeleteOneStudentsDbHandler(id int) error {
+
+	db, err := ConnectDB()
+	if err != nil {
+		return utils.ErrorHandler(err, "Error connecting to database")
+	}
+	defer db.Close()
+
+	query := "DELETE FROM students WHERE id = ?"
+	result, err := db.Exec(query, id)
+	if err != nil {
+		return utils.ErrorHandler(err, "Error deleting student")
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return utils.ErrorHandler(err, "Error retrieving delete result")
+	}
+	if rowsAffected == 0 {
+		return utils.ErrorHandler(err, "Student not found")
+	}
+	return nil
+
+}
+
+func DeleteStudentsDbHandler(ids []int) ([]int, error) {
+
+	db, err := ConnectDB()
+	if err != nil {
+		return nil, utils.ErrorHandler(err, "Error connecting to database")
+	}
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		return nil, utils.ErrorHandler(err, "Error starting transaction")
+	}
+
+	query := "DELETE FROM students WHERE id = ?"
+	stmt, err := tx.Prepare(query)
+	if err != nil {
+		tx.Rollback()
+		return nil, utils.ErrorHandler(err, "Error preparing delete statement")
+	}
+	defer stmt.Close()
+
+	var deleteIDs []int
+
+	for _, id := range ids {
+		result, err := stmt.Exec(id)
+		if err != nil {
+			return nil, utils.ErrorHandler(err, "Error deleting students")
+		}
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			tx.Rollback()
+			return nil, utils.ErrorHandler(err, "Error retrieving deleted result")
+		}
+		if rowsAffected > 0 {
+			deleteIDs = append(deleteIDs, id)
+		} else {
+			tx.Rollback()
+			return nil, utils.ErrorHandler(err, fmt.Sprintf("ID %d does not exist", id))
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return nil, utils.ErrorHandler(err, "Error committing transcation")
+	}
+	if len(deleteIDs) < 1 {
+		return nil, utils.ErrorHandler(err, "IDs do not exist")
+	}
+	return deleteIDs, nil
 }

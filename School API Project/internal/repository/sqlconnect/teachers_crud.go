@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"reflect"
 	"restapi/internal/model"
+	"strings"
 
 	"restapi/pkg/utils"
 )
@@ -187,7 +188,7 @@ func PatchTeachersDbHandler(updatedTeachers []map[string]any) error {
 
 		structPointers := GetStructPointers(&existingTeacher)
 
-		err = db.QueryRow(query, id).Scan(structPointers...)
+		err = tx.QueryRow(query, id).Scan(structPointers...)
 		if err != nil {
 			tx.Rollback()
 			if err == sql.ErrNoRows {
@@ -209,19 +210,19 @@ func PatchTeachersDbHandler(updatedTeachers []map[string]any) error {
 			}
 			for i := 0; i < teacherValue.NumField(); i++ {
 				field := teacherType.Field(i)
-				if field.Tag.Get("json") == column+",omitempty" {
-					fieldValue := teacherValue.Field(i) //  old value
-					if fieldValue.CanSet() {
+				cleanTag := strings.Split(field.Tag.Get("json"), ",")[0]
+				if cleanTag == column {
+					fieldToUpdate := teacherValue.Field(i) // old value
+					if fieldToUpdate.CanSet() {
 						val := reflect.ValueOf(value) // new value
-						if val.Type().ConvertibleTo(fieldValue.Type()) {
-							fieldValue.Set(val.Convert(fieldValue.Type()))
+						if val.Type().ConvertibleTo(fieldToUpdate.Type()) {
+							fieldToUpdate.Set(val.Convert(fieldToUpdate.Type()))
 						} else {
 							tx.Rollback()
-							log.Printf("Cannot convert %v to %v", val.Type(), fieldValue.Type())
+							log.Printf("Cannot convert %v to %v", val.Type(), fieldToUpdate.Type())
 							return utils.ErrorHandler(err, "Error updating data")
 						}
 					}
-					break
 				}
 			}
 		}
@@ -277,17 +278,17 @@ func PatchOneTeachersDbHandler(id int, updatedTeacher map[string]any) (model.Tea
 	for column, value := range updatedTeacher {
 		for i := 0; i < teacherType.NumField(); i++ {
 			field := teacherType.Field(i)
-			if field.Tag.Get("json") == column+",omitempty" {
-				if teacherValue.Field(i).CanSet() { // checking that user is allowed to update
+			cleanTag := strings.Split(field.Tag.Get("json"), ",")[0]
+			if cleanTag == column {
+				if teacherValue.Field(i).CanSet() {
 					teacherField := teacherValue.Field(i)
 					teacherField.Set(reflect.ValueOf(value).Convert(teacherValue.Field(i).Type()))
-
 				}
 			}
 		}
 	}
 
-	query = GenerateUpdateQuery(model.Teacher{}, "teachers") + " WHERE id = ?"
+	query = GenerateUpdateQuery(model.Teacher{}, "teachers")
 	structValues := GetStructValues(existingTeacher)
 	structValues = append(structValues, id)
 	_, err = db.Exec(query, structValues...)

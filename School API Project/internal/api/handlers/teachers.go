@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-type Response struct {
+type TeacherResponse struct {
 	Status string          `json:"status"`
 	Count  int             `json:"count"`
 	Data   []model.Teacher `json:"data"`
@@ -26,7 +26,7 @@ func getAllTeachers(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	response := Response{
+	response := TeacherResponse{
 		Status: "success",
 		Count:  len(teachers),
 		Data:   teachers,
@@ -37,7 +37,7 @@ func getAllTeachers(w http.ResponseWriter, r *http.Request) {
 }
 
 // get method --> /teachers/{teacher_id}
-func getTeacherById(w http.ResponseWriter, r *http.Request, idStr string) {
+func getTeacherById(w http.ResponseWriter, idStr string) {
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -60,7 +60,7 @@ func GetTeachersHandler(w http.ResponseWriter, r *http.Request) {
 	if idStr == "" {
 		getAllTeachers(w, r)
 	} else {
-		getTeacherById(w, r, idStr)
+		getTeacherById(w, idStr)
 	}
 }
 
@@ -118,7 +118,7 @@ func AddTeachersHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 
-	response := Response{
+	response := TeacherResponse{
 		Status: "success",
 		Count:  len(addedTeachers),
 		Data:   addedTeachers,
