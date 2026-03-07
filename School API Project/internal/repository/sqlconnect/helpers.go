@@ -116,6 +116,24 @@ func GenerateSelectQuery(model any, tableName string) string {
 
 }
 
+func GenerateSelectQueryForTeacher(model any, tableName1 string, tableName2 string) string {
+
+	modelType := reflect.TypeOf(model)
+	var columns string
+	for i := 0; i < modelType.NumField(); i++ {
+		dbTag := modelType.Field(i).Tag.Get("db")
+		cleanTag := strings.Split(dbTag, ",")[0]
+		if cleanTag != "" {
+			if columns != "" {
+				columns += ", "
+			}
+			columns += cleanTag
+		}
+	}
+	return fmt.Sprintf("SELECT %s FROM %s WHERE class = (SELECT class FROM %s WHERE id = ?)", columns, tableName1, tableName2)
+
+}
+
 func GenerateInsertQuery(model any, tableName string) string {
 
 	modelType := reflect.TypeOf(model)

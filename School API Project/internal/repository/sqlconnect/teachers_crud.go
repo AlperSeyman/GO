@@ -390,3 +390,55 @@ func DeleteTeachersDbHandler(ids []int) ([]int, error) {
 	return deletedIDs, nil
 
 }
+
+func GetStudentsByTeacher(id int) ([]model.Student, error) {
+
+	db, err := ConnectDB()
+	if err != nil {
+		return nil, utils.ErrorHandler(err, "Error connecting to database")
+	}
+	defer db.Close()
+
+	var students []model.Student
+
+	query := GenerateSelectQueryForTeacher(model.Student{}, "students", "teachers")
+	row, err := db.Query(query, id)
+	if err != nil {
+		return nil, utils.ErrorHandler(err, "Database query error")
+	}
+	defer row.Close()
+
+	for row.Next() {
+		var student model.Student
+		structPointers := GetStructPointers(&student)
+		err = row.Scan(structPointers...)
+		if err != nil {
+			return nil, utils.ErrorHandler(err, "Error scanning database results")
+		}
+		students = append(students, student)
+	}
+	err = row.Err()
+	if err != nil {
+		return nil, utils.ErrorHandler(err, "The database connection was lost while reading rows")
+	}
+	return students, nil
+}
+
+func GetStudentCountByTeacher(id int) (int, error) {
+
+	db, err := ConnectDB()
+	if err != nil {
+		return 0, utils.ErrorHandler(err, "Error connecting to database")
+	}
+	defer db.Close()
+
+	var studentCount int
+	query := "SELECT COUNT(*) FROM students WHERE class = (SELECT class FROM teachers WHERE id = ?)"
+	err = db.QueryRow(query, id).Scan(&studentCount)
+	if err != nil {
+		return 0, utils.ErrorHandler(err, "Error retrieving data")
+	}
+
+	return studentCount, nil
+
+}
