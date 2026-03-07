@@ -31,7 +31,7 @@ func main() {
 	// Create a custom server
 	server := &http.Server{
 		Addr:    port,
-		Handler: routers.Router(),
+		Handler: routers.MainRouter(),
 		// Handler:   middlewares.SecurityHeaders(middlewares.CORSMiddleware(mux)),
 		// Handler:   middlewares.CORSMiddleware(mux),
 		TLSConfig: tlsConfig,
