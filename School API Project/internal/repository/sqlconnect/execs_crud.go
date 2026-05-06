@@ -94,6 +94,16 @@ func AddExecDbHandler(newExecs []model.Exec) ([]model.Exec, error) {
 
 	addedExecs := make([]model.Exec, len(newExecs))
 	for i, newExec := range newExecs {
+		if newExec.Password == "" {
+			return nil, utils.ErrorHandler(nil, "Password cannot be empty")
+		}
+
+		hashedPassword, err := utils.HashPassword(newExec.Password)
+		if err != nil {
+			return nil, utils.ErrorHandler(err, "Error hashing password")
+		}
+		newExec.Password = hashedPassword
+
 		structValues := GetStructValues(newExec)
 		result, err := stmt.Exec(structValues...)
 		if err != nil {
@@ -104,6 +114,7 @@ func AddExecDbHandler(newExecs []model.Exec) ([]model.Exec, error) {
 			return nil, utils.ErrorHandler(err, "Error getting last insert ID")
 		}
 		newExec.ID = int(lastID)
+		newExec.Password = ""
 		addedExecs[i] = newExec
 	}
 	return addedExecs, nil
