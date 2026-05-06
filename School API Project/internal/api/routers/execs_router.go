@@ -9,20 +9,21 @@ func execsRouter() *http.ServeMux {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /execs", handlers.ExecsHandler)
-	mux.HandleFunc("GET /execs/{execs_id}", handlers.ExecsHandler)
+	mux.HandleFunc("GET /", handlers.GetExecsHandler)
+	mux.HandleFunc("GET /{exec_id}", handlers.GetExecsHandler)
 
-	mux.HandleFunc("POST /execs", handlers.ExecsHandler)
-	mux.HandleFunc("POST /execs/login", handlers.ExecsHandler)
-	mux.HandleFunc("POST /execs/logout", handlers.ExecsHandler)
-	mux.HandleFunc("POST /execs/forgotpassword", handlers.ExecsHandler)
-	mux.HandleFunc("POST /execs/updatepassword/reset/{resetcode}", handlers.ExecsHandler)
-	mux.HandleFunc("POST /execs/{execs_id}/updatepassword", handlers.ExecsHandler)
+	mux.HandleFunc("POST /", handlers.AddExecsHandler)
+	mux.HandleFunc("POST /login", handlers.GetExecsHandler)
+	mux.HandleFunc("POST /logout", handlers.GetExecsHandler)
+	mux.HandleFunc("POST /forgotpassword", handlers.GetExecsHandler)
+	mux.HandleFunc("POST /updatepassword/reset/{resetcode}", handlers.GetExecsHandler)
+	mux.HandleFunc("POST /{exec_id}/updatepassword", handlers.GetExecsHandler)
 
-	mux.HandleFunc("PATCH /execs", handlers.ExecsHandler)
-	mux.HandleFunc("PATCH /execs/{execs_id}", handlers.ExecsHandler)
+	mux.HandleFunc("PATCH /", handlers.PatchExecsHandler)
+	mux.HandleFunc("PATCH /{exec_id}", handlers.PatchOneExecsHandler)
 
-	mux.HandleFunc("DELETE /execs/{execs_id}", handlers.ExecsHandler)
+	mux.HandleFunc("DELETE /", handlers.DeleteExecsHandler)
+	mux.HandleFunc("DELETE /{exec_id}", handlers.DeleteOneExecsHandler)
 
 	return mux
 

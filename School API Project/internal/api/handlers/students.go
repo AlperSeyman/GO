@@ -164,7 +164,7 @@ func PatchStudentsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = sqlconnect.PatchTeachersDbHandler(updatedStudent)
+	err = sqlconnect.PatchStudentsDbHandler(updatedStudent)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -172,7 +172,7 @@ func PatchStudentsHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// patch method --> /teachers/{teacher_id}
+// patch method --> /student/{student_id}
 func PatchOneStudentsHandler(w http.ResponseWriter, r *http.Request) {
 
 	idStr := r.PathValue("student_id")
@@ -185,7 +185,7 @@ func PatchOneStudentsHandler(w http.ResponseWriter, r *http.Request) {
 	var updatedStudent map[string]any
 	err = json.NewDecoder(r.Body).Decode(&updatedStudent)
 	if err != nil {
-		http.Error(w, "Ivalid Request Payload", http.StatusBadRequest)
+		http.Error(w, "Invalid Request Payload", http.StatusBadRequest)
 		return
 	}
 
@@ -232,6 +232,12 @@ func DeleteOneStudentsHandler(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("student_id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
+		http.Error(w, "Invalid Student ID", http.StatusBadRequest)
+		return
+	}
+
+	err = sqlconnect.DeleteOneStudentsDbHandler(id)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -242,7 +248,7 @@ func DeleteOneStudentsHandler(w http.ResponseWriter, r *http.Request) {
 		Status string `json:"status"`
 		ID     int    `json:"id"`
 	}{
-		Status: "Teacher successfully deleted",
+		Status: "Student successfully deleted",
 		ID:     id,
 	}
 	json.NewEncoder(w).Encode(response)
