@@ -354,3 +354,25 @@ func DeleteExecsDbHandler(ids []int) ([]int, error) {
 	}
 	return deletedIDs, nil
 }
+
+func LoginExecsDbHandler(username string) (model.Exec, error) {
+
+	db, err := ConnectDB()
+	if err != nil {
+		return model.Exec{}, utils.ErrorHandler(err, "Error connecting to database...")
+	}
+	defer db.Close()
+
+	var exec model.Exec
+
+	query := GenerateSelectQuery(model.Exec{}, "execs") + " WHERE username = ?"
+	structPointers := GetStructPointers(&exec)
+	err = db.QueryRow(query, username).Scan(structPointers...)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return model.Exec{}, utils.ErrorHandler(err, "Exec not found.")
+		}
+		return model.Exec{}, utils.ErrorHandler(err, "Database query error")
+	}
+	return exec, nil
+}

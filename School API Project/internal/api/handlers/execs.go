@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"restapi/internal/model"
 	"restapi/internal/repository/sqlconnect"
+	"restapi/pkg/utils"
 	"strconv"
 )
 
@@ -226,4 +227,49 @@ func DeleteOneExecsHandler(w http.ResponseWriter, r *http.Request) {
 		ID:     id,
 	}
 	json.NewEncoder(w).Encode(response)
+}
+
+func LoginExecsHandler(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	var req model.Exec
+	// Data Validation
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if req.Username == "" || req.Password == "" {
+		http.Error(w, "Username and password are required", http.StatusBadRequest)
+		return
+	}
+
+	// Search for user if user actually exists
+	exec, err := sqlconnect.LoginExecsDbHandler(req.Username)
+	if err != nil {
+		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
+		return
+	}
+
+	// is user active
+	if exec.InactiveStatus {
+		http.Error(w, "Account is inactive", http.StatusForbidden)
+		return
+	}
+
+	// verify password
+	match, err := utils.VerifyPassword(req.Password, exec.Password)
+	if err != nil {
+		http.Error(w, "Error verifying password", http.StatusInternalServerError)
+		return
+	}
+	if !match {
+		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
+		return
+	}
+	// generate token
+
+	// send token as a response or as a cookie
 }
